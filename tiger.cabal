@@ -1,0 +1,47 @@
+cabal-version: 2.0
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 1630085efa963af562ccc02dcea7f4f8486ec1d0f16a4240191f3fd3b0f18b25
+
+name:           tiger
+version:        0.1.0.0
+category:       Web
+homepage:       https://github.com/githubuser/tiger#readme
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2020 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    src/Tokens.x
+
+library
+  exposed-modules:
+      Tokens
+  other-modules:
+      Paths_tiger
+  hs-source-dirs:
+      src
+  build-depends:
+      array
+    , base >=4.7 && <5
+  default-language: Haskell2010
+
+executable tiger
+  main-is: Main.hs
+  other-modules:
+      Paths_tiger
+  hs-source-dirs:
+      app
+  build-tools:
+      alex
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , tiger
+  default-language: Haskell2010
