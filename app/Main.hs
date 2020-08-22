@@ -1,8 +1,8 @@
-module Main where
+module Main (main) where
 
-import Tokens (tokenize)
+import           Tokens (tokenize)
 
 main :: IO ()
 main = do
-  s <- getContents
-  print $ tokenize s
+    s <- getContents
+    print $ tokenize s
