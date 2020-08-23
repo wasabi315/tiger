@@ -10,7 +10,6 @@ copyright:           2020 Author name here
 category:            Web
 extra-source-files:
   - README.md
-  - src/Tokens.x
 
 dependencies:
   - base >= 4.7 && < 5
@@ -23,7 +22,5 @@ executables:
   tiger:
     source-dirs:      app
     main:             Main.hs
-    system-build-tools:
-      - alex
     dependencies:
       - tiger
