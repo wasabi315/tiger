@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8fb994ae2f0c5b80094ee20455d7a238a02c7cc58b2a1149956e4cc4849e1a10
+-- hash: cf8e8e86d0f7c472efb3f9b50e5f2b223b8b8c99409a2abef5aca39a711d1f5b
 
 name:           tiger
 version:        0.1.0.0
@@ -21,6 +21,7 @@ extra-source-files:
 
 library
   exposed-modules:
+      Tiger.AST
       Tiger.Reporting.Annotation
   other-modules:
       Paths_tiger

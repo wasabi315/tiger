@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wall      #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE StrictData    #-}
 
 module Tiger.Reporting.Annotation
     ( Located (..)
@@ -11,22 +12,22 @@ module Tiger.Reporting.Annotation
 
 
 data Located a = At Region a
-    deriving ( Functor )
+    deriving ( Functor, Eq, Show )
 
 
 data Position = Position
     { posnFile :: String
-    , posnLine :: {-# UNPACK #-} !Int
-    , posnCol  :: {-# UNPACK #-} !Int
+    , posnLine :: {-# UNPACK #-} Int
+    , posnCol  :: {-# UNPACK #-} Int
     } deriving ( Eq, Show )
 
 
 data Region = Region
     { rgnFile  :: String
-    , rgnSLine :: {-# UNPACK #-} !Int
-    , rgnSCol  :: {-# UNPACK #-} !Int
-    , rgnELine :: {-# UNPACK #-} !Int
-    , rgnECol  :: {-# UNPACK #-} !Int
+    , rgnSLine :: {-# UNPACK #-} Int
+    , rgnSCol  :: {-# UNPACK #-} Int
+    , rgnELine :: {-# UNPACK #-} Int
+    , rgnECol  :: {-# UNPACK #-} Int
     } deriving ( Eq, Show )
 
 
