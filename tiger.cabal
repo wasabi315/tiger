@@ -1,10 +1,10 @@
-cabal-version: 2.0
+cabal-version: 1.12
 
 -- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1630085efa963af562ccc02dcea7f4f8486ec1d0f16a4240191f3fd3b0f18b25
+-- hash: 8fb994ae2f0c5b80094ee20455d7a238a02c7cc58b2a1149956e4cc4849e1a10
 
 name:           tiger
 version:        0.1.0.0
@@ -18,11 +18,10 @@ license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
-    src/Tokens.x
 
 library
   exposed-modules:
-      Tokens
+      Tiger.Reporting.Annotation
   other-modules:
       Paths_tiger
   hs-source-dirs:
@@ -38,8 +37,6 @@ executable tiger
       Paths_tiger
   hs-source-dirs:
       app
-  build-tools:
-      alex
   build-depends:
       array
     , base >=4.7 && <5
