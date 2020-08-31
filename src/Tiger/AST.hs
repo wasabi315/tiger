@@ -8,7 +8,7 @@ module Tiger.AST
     , Var, Var_ (..)
     , Func, Func_ (..)
     , Type, Type_ (..)
-    , Op (..)
+    , BinOp (..), UnOp (..)
     ) where
 
 import           Data.Text                  (Text)
@@ -27,7 +27,8 @@ data Expr_
     | IntExpr {-# UNPACK #-} Int
     | StrExpr Text
     | CallExpr Symbol [Expr]
-    | OpExpr Expr Op Expr
+    | UnOpExpr UnOp Expr
+    | BinOpExpr BinOp Expr Expr
     | RecordExpr [(A.Located Symbol, Expr)] Type
     | SeqExp [Expr]
     | AssignExpr Var Expr
@@ -76,7 +77,7 @@ data Type_
     | ArrayTy Type
     deriving ( Eq, Show )
 
-data Op
+data BinOp
     = PlusOp
     | MinusOp
     | MulOp
@@ -87,4 +88,10 @@ data Op
     | LeOp
     | GtOp
     | GeOp
+    | AndOp
+    | OrOp
+    deriving ( Eq, Show )
+
+data UnOp
+    = NegOp
     deriving ( Eq, Show )
