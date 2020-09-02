@@ -99,6 +99,16 @@ brackets :: Parser a -> Parser a
 brackets = between (symbol "[") (symbol "]")
 {-# INLINE brackets #-}
 
+
+semi :: Parser Text
+semi = symbol ";"
+{-# INLINE semi #-}
+
+
+comma :: Parser Text
+comma = symbol ","
+{-# INLINE comma #-}
+
 -------------------------------------------------------------------------------
 
 located :: Parser a -> Parser (A.Located a)
@@ -168,18 +178,20 @@ pTermExpr = pExprPrimary
 
 
 pExprPrimary :: Parser Expr
-pExprPrimary = lexeme . located $ choice
+pExprPrimary = choice
     [ try pNilExpr
     , pIntExpr
     , pStrExpr
+    , pNoValueExpr
     , try pCallExpr
     , pVarExpr
+    , parens pExpr
     ]
 {-# INLINE pExprPrimary #-}
 
 
-pVarExpr :: Parser Expr_
-pVarExpr = VarExpr <$> pVar
+pVarExpr :: Parser Expr
+pVarExpr = lexeme $ located (VarExpr <$> pVar)
 {-# INLINE pVarExpr #-}
 
 
@@ -200,24 +212,28 @@ pVar = located $ do
         ]
 
 
-pCallExpr :: Parser Expr_
-pCallExpr = do
+pCallExpr :: Parser Expr
+pCallExpr = lexeme . located $ do
     i <- ident
-    args <- parens (pExpr `sepBy` symbol ",")
+    args <- parens (pExpr `sepBy` comma)
     pure (CallExpr i args)
 {-# INLINE pCallExpr #-}
 
 
-pNilExpr :: Parser Expr_
-pNilExpr = NilExpr <$ keyword "nil"
+pNilExpr :: Parser Expr
+pNilExpr = lexeme $ located (NilExpr <$ keyword "nil")
 {-# INLINE pNilExpr #-}
 
 
-pIntExpr :: Parser Expr_
-pIntExpr = IntExpr <$> integer
+pIntExpr :: Parser Expr
+pIntExpr = lexeme $ located (IntExpr <$> integer)
 {-# INLINE pIntExpr #-}
 
 
-pStrExpr :: Parser Expr_
-pStrExpr = StrExpr <$> string
+pStrExpr :: Parser Expr
+pStrExpr = lexeme $ located (StrExpr <$> string)
 {-# INLINE pStrExpr #-}
+
+
+pNoValueExpr :: Parser Expr
+pNoValueExpr = lexeme $ located (NoValueExpr <$ symbol "()")

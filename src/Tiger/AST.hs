@@ -24,6 +24,7 @@ type Expr = A.Located Expr_
 data Expr_
     = VarExpr Var
     | NilExpr
+    | NoValueExpr
     | IntExpr {-# UNPACK #-} Int
     | StrExpr Text
     | CallExpr Symbol [Expr]
