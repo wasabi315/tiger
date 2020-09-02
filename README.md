@@ -68,9 +68,17 @@ primary
     | "nil"
     | integer
     | string
+    | record
+    | array
     | lvalue
     | id , "(" , [ exp , { "," , exp } ] , ")"
     | "(" , exp , ")" ;
+
+record
+    = type-id , "{" , [ id , "=" , exp , { "," , id , "=" , exp } ] , "}" ;
+
+array
+    = type-id , "[" , exp , "]" , "of" , exp ;
 
 id
     = IDENTIFIER ;
