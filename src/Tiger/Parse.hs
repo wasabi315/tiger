@@ -172,6 +172,7 @@ table =
     , [ binaryL "|"  (BinOpExpr OrOp) ]
     ]
 
+
 pTermExpr :: Parser Expr
 pTermExpr = pExprPrimary
 {-# INLINE pTermExpr #-}
