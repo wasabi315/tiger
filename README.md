@@ -5,14 +5,14 @@
 ## Syntax
 
 ```ebnf
-exp
-    = "let" , { dec } , "in" , [ exp , { ";" , exp } ] , "end"
-    | "if" , exp , "then" , exp , [ "else" , exp ]
-    | "while" , exp , "do" , exp
-    | "for" , id , ":=" , exp , "to" , exp , "do" , exp
+expr
+    = "let" , { dec } , "in" , [ expr , { ";" , expr } ] , "end"
+    | "if" , expr , "then" , expr , [ "else" , expr ]
+    | "while" , expr , "do" , expr
+    | "for" , id , ":=" , expr , "to" , expr , "do" , expr
     | "break"
-    | "(" , exp , { ";" , exp } , ")"
-    | lvalue , ":=" , exp
+    | "(" , expr , { ";" , expr } , ")"
+    | var , ":=" , expr
     | value ;
 
 dec
@@ -33,15 +33,15 @@ tyfields
     | id , ":" , type-id , { "," , id , ":" , type-id } ;
 
 vardec
-    = "var" , id , [ ":" , type-id ] , ":=" , exp ;
+    = "var" , id , [ ":" , type-id ] , ":=" , expr ;
 
 fundec
-    = "function" , id , "(" , tyfields , ")" , [ ":" , type-id ] , "=" , exp ;
+    = "function" , id , "(" , tyfields , ")" , [ ":" , type-id ] , "=" , expr ;
 
-lvalue
+var
     = id
-    | lvalue , "." , id
-    | lvalue , "[" , exp , "]" ;
+    | var , "." , id
+    | var , "[" , expr , "]" ;
 
 value
     = disjunction ;
@@ -71,15 +71,15 @@ primary
     | string
     | record
     | array
-    | lvalue
-    | id , "(" , [ exp , { "," , exp } ] , ")"
-    | "(" , exp , ")" ;
+    | var
+    | id , "(" , [ expr , { "," , expr } ] , ")"
+    | "(" , expr , ")" ;
 
 record
-    = type-id , "{" , [ id , "=" , exp , { "," , id , "=" , exp } ] , "}" ;
+    = type-id , "{" , [ id , "=" , expr , { "," , id , "=" , expr } ] , "}" ;
 
 array
-    = type-id , "[" , exp , "]" , "of" , exp ;
+    = type-id , "[" , expr , "]" , "of" , expr ;
 
 id
     = IDENTIFIER ;
