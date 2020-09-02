@@ -25,17 +25,18 @@ tydec
 
 ty
     = type-id
-    | "{" , [ tyfields ] , "}"
+    | "{" , tyfields , "}"
     | "array" , "of" , type-id ;
 
 tyfields
-    = id , ":" , type-id , { "," , id , ":" , type-id } ;
+    = ε
+    | id , ":" , type-id , { "," , id , ":" , type-id } ;
 
 vardec
     = "var" , id , [ ":" , type-id ] , ":=" , exp ;
 
 fundec
-    = "function" , id , "(" , [ tyfields ] , ")" , [ ":" , type-id ] , "=" , exp ;
+    = "function" , id , "(" , tyfields , ")" , [ ":" , type-id ] , "=" , exp ;
 
 lvalue
     = id
