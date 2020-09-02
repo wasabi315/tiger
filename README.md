@@ -6,12 +6,12 @@
 
 ```ebnf
 exp
-    = "let" , { dec } , "in" , [ exp , { " ;" , exp } ] , "end"
+    = "let" , { dec } , "in" , [ exp , { ";" , exp } ] , "end"
     | "if" , exp , "then" , exp , [ "else" , exp ]
     | "while" , exp , "do" , exp
     | "for" , id , ":=" , exp , "to" , exp , "do" , exp
     | "break"
-    | "(" , exp , { " ;" , exp } , ")"
+    | "(" , exp , { ";" , exp } , ")"
     | lvalue , ":=" , exp
     | value ;
 
