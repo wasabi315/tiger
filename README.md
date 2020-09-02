@@ -35,7 +35,7 @@ vardec
     = "var" , id , [ ":" , type-id ] , ":=" , exp ;
 
 fundec
-    = "function" , id , "(" , tyfields , ")" , [ ":" , type-id ] , "=" , exp ;
+    = "function" , id , "(" , [ tyfields ] , ")" , [ ":" , type-id ] , "=" , exp ;
 
 lvalue
     = id
