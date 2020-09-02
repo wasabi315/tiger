@@ -64,7 +64,7 @@ unary
     = [ "-" ] , primary ;
 
 primary
-    = "(" , ")"
+    = "()"
     | "nil"
     | integer
     | string
