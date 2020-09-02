@@ -143,13 +143,13 @@ binaryN op f = InfixN $ do
 -------------------------------------------------------------------------------
 
 pExpr :: Parser Expr
-pExpr = pOpExpr
-{-# INLINE pExpr #-}
+pExpr = choice
+    [ pValue
+    ]
 
 
-pOpExpr :: Parser Expr
-pOpExpr = lexeme $ makeExprParser pTermExpr table
-{-# INLINE pOpExpr #-}
+pValue :: Parser Expr
+pValue = lexeme $ makeExprParser pPrimary table
 
 
 table :: [[Operator Parser Expr]]
@@ -173,68 +173,54 @@ table =
     ]
 
 
-pTermExpr :: Parser Expr
-pTermExpr = pExprPrimary
-{-# INLINE pTermExpr #-}
-
-
-pExprPrimary :: Parser Expr
-pExprPrimary = choice
-    [ try pNilExpr
-    , pIntExpr
-    , pStrExpr
-    , pNoValueExpr
-    , try pCallExpr
-    , pVarExpr
-    , parens pExpr
-    ]
-{-# INLINE pExprPrimary #-}
-
-
-pVarExpr :: Parser Expr
-pVarExpr = lexeme $ located (VarExpr <$> pVar)
-{-# INLINE pVarExpr #-}
-
-
-pVar :: Parser Var
-pVar = located $ do
+pLvar_ :: Parser Expr_
+pLvar_ = fmap VarExpr . located $ do
     i <- ident
-    pVarHelper (SimpleVar i)
+    rest (SimpleVar i)
   where
-    pVarHelper v = choice
+    rest v = choice
         [ do
-            char '.'
+            _ <- char '.'
             f <- located ident
-            pVarHelper (FieldVar v f)
+            rest (FieldVar v f)
         , brackets $ do
             e <- pExpr
-            pVarHelper (SubscriptVar v e)
+            rest (SubscriptVar v e)
         , pure v
         ]
 
 
-pCallExpr :: Parser Expr
-pCallExpr = lexeme . located $ do
+pPrimary :: Parser Expr
+pPrimary =
+    (lexeme . located $ choice
+        [ try pNoValue_
+        , try pNil_
+        , pInteger_
+        , pString_
+        , try pCall_
+        , pLvar_
+        ])
+    <|> parens pExpr
+
+
+pCall_ :: Parser Expr_
+pCall_ =  do
     i <- ident
     args <- parens (pExpr `sepBy` comma)
     pure (CallExpr i args)
-{-# INLINE pCallExpr #-}
 
 
-pNilExpr :: Parser Expr
-pNilExpr = lexeme $ located (NilExpr <$ keyword "nil")
-{-# INLINE pNilExpr #-}
+pNoValue_ :: Parser Expr_
+pNoValue_ = NoValueExpr <$ (symbol "(" *> symbol ")")
 
 
-pIntExpr :: Parser Expr
-pIntExpr = lexeme $ located (IntExpr <$> integer)
-{-# INLINE pIntExpr #-}
+pNil_ :: Parser Expr_
+pNil_ = NilExpr <$ keyword "nil"
 
 
-pStrExpr :: Parser Expr
-pStrExpr = lexeme $ located (StrExpr <$> string)
-{-# INLINE pStrExpr #-}
+pInteger_ :: Parser Expr_
+pInteger_ = IntExpr <$> integer
 
 
-pNoValueExpr :: Parser Expr
-pNoValueExpr = lexeme $ located (NoValueExpr <$ symbol "()")
+pString_ :: Parser Expr_
+pString_ = StrExpr <$> string
