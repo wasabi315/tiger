@@ -3,15 +3,9 @@
 
 module Tiger.Parse
     ( Parser
-    , ident
-    , integer
-    , float
-    , string
-    , character
-    , keyword
-    , parens
-    , braces
     , pExpr
+    , pRecord_
+    , pArray_
     , module Text.Megaparsec
     , module Text.Megaparsec.Char
     ) where
@@ -148,6 +142,29 @@ pExpr = choice
     ]
 
 
+pTypeId :: Parser Type
+pTypeId = lexeme $ do
+    A.At r i <- located ident
+    pure $ A.At r (NameTy i)
+
+
+pLvar_ :: Parser Expr_
+pLvar_ = fmap VarExpr . located $ do
+    i <- ident
+    rest (SimpleVar i)
+  where
+    rest v = choice
+        [ do
+            _ <- char '.'
+            f <- located ident
+            rest (FieldVar v f)
+        , brackets $ do
+            e <- pExpr
+            rest (SubscriptVar v e)
+        , pure v
+        ]
+
+
 pValue :: Parser Expr
 pValue = lexeme $ makeExprParser pPrimary table
 
@@ -173,30 +190,16 @@ table =
     ]
 
 
-pLvar_ :: Parser Expr_
-pLvar_ = fmap VarExpr . located $ do
-    i <- ident
-    rest (SimpleVar i)
-  where
-    rest v = choice
-        [ do
-            _ <- char '.'
-            f <- located ident
-            rest (FieldVar v f)
-        , brackets $ do
-            e <- pExpr
-            rest (SubscriptVar v e)
-        , pure v
-        ]
-
-
+-- FIXME: Avoid try
 pPrimary :: Parser Expr
 pPrimary =
     (lexeme . located $ choice
-        [ try pNoValue_
+        [ pNoValue_
         , try pNil_
         , pInteger_
         , pString_
+        , try pRecord_
+        , try pArray_
         , try pCall_
         , pLvar_
         ])
@@ -211,7 +214,7 @@ pCall_ =  do
 
 
 pNoValue_ :: Parser Expr_
-pNoValue_ = NoValueExpr <$ (symbol "(" *> symbol ")")
+pNoValue_ = NoValueExpr <$ chunk "()"
 
 
 pNil_ :: Parser Expr_
@@ -224,3 +227,25 @@ pInteger_ = IntExpr <$> integer
 
 pString_ :: Parser Expr_
 pString_ = StrExpr <$> string
+
+
+pRecord_ :: Parser Expr_
+pRecord_ = do
+    ty <- pTypeId
+    fs <- braces $ kvPair `sepBy` comma
+    pure (RecordExpr fs ty)
+  where
+    kvPair = do
+        f <- lexeme (located ident)
+        _ <- symbol "="
+        e <- pExpr
+        pure (f, e)
+
+
+pArray_ :: Parser Expr_
+pArray_ = do
+    ty <- pTypeId
+    e1 <- brackets pExpr
+    _  <- lexeme $ keyword "of"
+    e2 <- pExpr
+    pure (ArrayExpr ty e1 e2)
