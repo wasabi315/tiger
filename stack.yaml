@@ -20,7 +20,7 @@
 resolver: lts-16.10
 
 # User packages to be built.
-# Various formats can be used as shown in the example below.
+# LcVarious formats can be used as shown in the example below.
 #
 # packages:
 # - some-directory

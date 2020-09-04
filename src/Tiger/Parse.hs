@@ -103,21 +103,21 @@ located p = do
 {-# INLINE located #-}
 
 
-prefix :: Text -> (Expr -> Expr_) -> Operator Parser Expr
+prefix :: Text -> (LcExpr -> Expr) -> Operator Parser LcExpr
 prefix op f = Prefix $ do
     A.At r _ <- located (symbol op)
     pure $ \e -> A.At r (f e)
 {-# INLINE prefix #-}
 
 
-binaryL :: Text -> (Expr -> Expr -> Expr_) -> Operator Parser Expr
+binaryL :: Text -> (LcExpr -> LcExpr -> Expr) -> Operator Parser LcExpr
 binaryL op f = InfixL $ do
     A.At r _ <- located (symbol op)
     pure $ \e1 e2 -> A.At r (f e1 e2)
 {-# INLINE binaryL #-}
 
 
-binaryN :: Text -> (Expr -> Expr -> Expr_) -> Operator Parser Expr
+binaryN :: Text -> (LcExpr -> LcExpr -> Expr) -> Operator Parser LcExpr
 binaryN op f = InfixN $ do
     A.At r _ <- located (symbol op)
     pure $ \e1 e2 -> A.At r (f e1 e2)
@@ -125,22 +125,22 @@ binaryN op f = InfixN $ do
 
 -------------------------------------------------------------------------------
 
-pExpr :: Parser Expr
-pExpr = choice
+pLcExpr :: Parser LcExpr
+pLcExpr = choice
     [ pValue
     ]
 
 
-pTypeId :: Parser Type
-pTypeId = lexeme $ do
+pLcTypeId :: Parser LcType
+pLcTypeId = lexeme $ do
     A.At r i <- located ident
     pure $ A.At r (NameTy i)
 
 
-pLvar_ :: Parser Expr_
-pLvar_ = fmap VarExpr . located $ do
+pVar :: Parser Expr
+pVar = fmap VarExpr . located $ do
     i <- ident
-    rest (SimpleVar i)
+    rest (NameVar i)
     where
         rest v = choice
             [ do
@@ -148,93 +148,96 @@ pLvar_ = fmap VarExpr . located $ do
                 f <- located ident
                 rest (FieldVar v f)
             , brackets $ do
-                e <- pExpr
-                rest (SubscriptVar v e)
+                e <- pLcExpr
+                rest (IdxedVar v e)
             , pure v
             ]
 
 
-pValue :: Parser Expr
+pValue :: Parser LcExpr
 pValue = lexeme $ makeExprParser pPrimary table
 
 
-table :: [[Operator Parser Expr]]
+table :: [[Operator Parser LcExpr]]
 table =
-    [ [ prefix  "-"  (UnOpExpr  NegOp) ]
-    , [ binaryL "*"  (BinOpExpr MulOp)
-      , binaryL "/"  (BinOpExpr DivOp)
+    [ [ prefix  "-"  (UopExpr NegOp)
       ]
-    , [ binaryL "+"  (BinOpExpr PlusOp)
-      , binaryL "-"  (BinOpExpr MinusOp)
+    , [ binaryL "*"  (BopExpr MulOp)
+      , binaryL "/"  (BopExpr DivOp)
       ]
-    , [ binaryN "==" (BinOpExpr EqOp)
-      , binaryN "!=" (BinOpExpr NeqOp)
-      , binaryN ">=" (BinOpExpr GeOp)
-      , binaryN ">"  (BinOpExpr GtOp)
-      , binaryN "<=" (BinOpExpr LeOp)
-      , binaryN "<"  (BinOpExpr LtOp)
+    , [ binaryL "+"  (BopExpr AddOp)
+      , binaryL "-"  (BopExpr SubOp)
       ]
-    , [ binaryL "&"  (BinOpExpr AndOp) ]
-    , [ binaryL "|"  (BinOpExpr OrOp) ]
+    , [ binaryN "==" (BopExpr EqOp)
+      , binaryN "!=" (BopExpr NeqOp)
+      , binaryN ">=" (BopExpr GeOp)
+      , binaryN ">"  (BopExpr GtOp)
+      , binaryN "<=" (BopExpr LeOp)
+      , binaryN "<"  (BopExpr LtOp)
+      ]
+    , [ binaryL "&"  (BopExpr AndOp)
+      ]
+    , [ binaryL "|"  (BopExpr OrOp)
+      ]
     ]
 
 
 -- FIXME: Avoid try
-pPrimary :: Parser Expr
+pPrimary :: Parser LcExpr
 pPrimary =
     (lexeme . located $ choice
-        [ pNoValue_
+        [ pUnit_
         , try pNil_
         , pInteger_
         , pString_
         , try pRecord_
         , try pArray_
         , try pCall_
-        , pLvar_
+        , pVar
         ])
-    <|> parens pExpr
+    <|> parens pLcExpr
 
 
-pCall_ :: Parser Expr_
+pCall_ :: Parser Expr
 pCall_ =  do
     i <- ident
-    args <- parens (pExpr `sepBy` comma)
+    args <- parens (pLcExpr `sepBy` comma)
     pure (CallExpr i args)
 
 
-pNoValue_ :: Parser Expr_
-pNoValue_ = NoValueExpr <$ chunk "()"
+pUnit_ :: Parser Expr
+pUnit_ = UnitExpr <$ chunk "()"
 
 
-pNil_ :: Parser Expr_
+pNil_ :: Parser Expr
 pNil_ = NilExpr <$ keyword "nil"
 
 
-pInteger_ :: Parser Expr_
+pInteger_ :: Parser Expr
 pInteger_ = IntExpr <$> integer
 
 
-pString_ :: Parser Expr_
+pString_ :: Parser Expr
 pString_ = StrExpr <$> string
 
 
-pRecord_ :: Parser Expr_
+pRecord_ :: Parser Expr
 pRecord_ = do
-    ty <- pTypeId
+    ty <- pLcTypeId
     fs <- braces $ kvPair `sepBy` comma
     pure (RecordExpr fs ty)
     where
         kvPair = do
             f <- lexeme (located ident)
             _ <- symbol "="
-            e <- pExpr
+            e <- pLcExpr
             pure (f, e)
 
 
-pArray_ :: Parser Expr_
+pArray_ :: Parser Expr
 pArray_ = do
-    ty <- pTypeId
-    e1 <- brackets pExpr
+    ty <- pLcTypeId
+    e1 <- brackets pLcExpr
     _  <- lexeme $ keyword "of"
-    e2 <- pExpr
+    e2 <- pLcExpr
     pure (ArrayExpr ty e1 e2)

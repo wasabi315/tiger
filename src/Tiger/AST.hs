@@ -3,12 +3,13 @@
 
 module Tiger.AST
     ( Symbol
-    , Expr, Expr_ (..)
-    , Dec, Dec_ (..)
-    , Var, Var_ (..)
-    , Func, Func_ (..)
-    , Type, Type_ (..)
-    , BinOp (..), UnOp (..)
+    , LcExpr, Expr (..)
+    , LcDec, Dec (..)
+    , LcVar, Var (..)
+    , LcFunc, Func (..)
+    , LcType, Type (..)
+    , Bop (..)
+    , Uop (..)
     ) where
 
 import           Data.Text                  (Text)
@@ -19,68 +20,37 @@ import qualified Tiger.Reporting.Annotation as A
 type Symbol = Text
 
 
-type Expr = A.Located Expr_
+type LcExpr = A.Located Expr
+type LcDec  = A.Located Dec
+type LcFunc = A.Located Func
+type LcVar  = A.Located Var
+type LcType = A.Located Type
 
-data Expr_
-    = VarExpr Var
-    | NilExpr
-    | NoValueExpr
+
+data Expr
+    = NilExpr
+    | UnitExpr
     | IntExpr {-# UNPACK #-} Int
     | StrExpr Text
-    | CallExpr Symbol [Expr]
-    | UnOpExpr UnOp Expr
-    | BinOpExpr BinOp Expr Expr
-    | RecordExpr [(A.Located Symbol, Expr)] Type
-    | SeqExp [Expr]
-    | AssignExpr Var Expr
-    | IfExpr Expr Expr (Maybe Expr)
-    | WhileExpr Expr Expr
-    | ForExpr (A.Located Symbol) Expr Expr Expr
+    | VarExpr LcVar
+    | CallExpr Symbol [LcExpr]
+    | UopExpr Uop LcExpr
+    | BopExpr Bop LcExpr LcExpr
+    | RecordExpr [(A.Located Symbol, LcExpr)] LcType
+    | ArrayExpr LcType LcExpr LcExpr
+    | SeqExp [LcExpr]
+    | AssignExpr LcVar LcExpr
+    | IfExpr LcExpr LcExpr (Maybe LcExpr)
+    | WhileExpr LcExpr LcExpr
+    | ForExpr (A.Located Symbol) LcExpr LcExpr LcExpr
     | BreakExpr
-    | LetExpr [Dec] Expr
-    | ArrayExpr Type Expr Expr
+    | LetExpr [LcDec] LcExpr
     deriving ( Eq, Show )
 
 
-type Dec = A.Located Dec_
-
-data Dec_
-    = FuncDec [Func]
-    | VarDec Symbol (Maybe Type) Expr
-    | TypeDec [(A.Located Symbol, Type)]
-    deriving ( Eq, Show )
-
-
-type Var = A.Located Var_
-
-data Var_
-    = SimpleVar Symbol
-    | FieldVar Var_ (A.Located Symbol)
-    | SubscriptVar Var_ Expr
-    deriving ( Eq, Show )
-
-
-type Func = A.Located Func_
-
-data Func_ = Func
-    { name   :: Symbol
-    , params :: [(A.Located Symbol, Type)]
-    , result :: Maybe Type
-    , body   :: Expr
-    } deriving ( Eq, Show )
-
-
-type Type = A.Located Type_
-
-data Type_
-    = NameTy Symbol
-    | RecordTy [(A.Located Symbol, Type)]
-    | ArrayTy Type
-    deriving ( Eq, Show )
-
-data BinOp
-    = PlusOp
-    | MinusOp
+data Bop
+    = AddOp
+    | SubOp
     | MulOp
     | DivOp
     | EqOp
@@ -93,6 +63,36 @@ data BinOp
     | OrOp
     deriving ( Eq, Show )
 
-data UnOp
+
+data Uop
     = NegOp
+    deriving ( Eq, Show )
+
+
+data Dec
+    = FuncDec [LcFunc]
+    | VarDec Symbol (Maybe LcType) LcExpr
+    | TypeDec [(A.Located Symbol, LcType)]
+    deriving ( Eq, Show )
+
+
+data Var
+    = NameVar Symbol
+    | FieldVar Var (A.Located Symbol)
+    | IdxedVar Var LcExpr
+    deriving ( Eq, Show )
+
+
+data Func = Func
+    { name   :: Symbol
+    , params :: [(A.Located Symbol, LcType)]
+    , result :: Maybe LcType
+    , body   :: LcExpr
+    } deriving ( Eq, Show )
+
+
+data Type
+    = NameTy Symbol
+    | RecordTy [(A.Located Symbol, LcType)]
+    | ArrayTy LcType
     deriving ( Eq, Show )
