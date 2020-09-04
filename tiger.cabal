@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 422881510d9701d04285fb95071e082e55fadd1e5e6143d91be5e9f473283648
+-- hash: 54dd40b4ffdca883959e385cf41c04ca79b7a9cc8f4cbf755c018ea0a6bacf6e
 
 name:           tiger
 version:        0.1.0.0
@@ -30,6 +30,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
     , megaparsec
     , parser-combinators
     , text
@@ -43,6 +44,7 @@ executable tiger
       app
   build-depends:
       base >=4.7 && <5
+    , containers
     , megaparsec
     , parser-combinators
     , text

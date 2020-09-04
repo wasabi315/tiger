@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
+{-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Tiger.Parse
@@ -9,12 +10,15 @@ module Tiger.Parse
 
 import           Control.Monad.Combinators.Expr
 import           Data.Char
+import           Data.Set                       (Set)
+import qualified Data.Set                       as S
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
 import           Data.Void
 import           Text.Megaparsec
 import           Text.Megaparsec.Char           hiding (string)
 import qualified Text.Megaparsec.Char.Lexer     as L
+import           Text.Megaparsec.Error.Builder
 
 import           Tiger.AST
 import qualified Tiger.Reporting.Annotation     as A
@@ -47,10 +51,24 @@ isValidIdentChar c = isAlphaNum c || c == '_'
 
 ident :: Parser Text
 ident = do
+    o  <- getOffset
     c  <- letterChar
     cs <- takeWhile1P Nothing isValidIdentChar
-    pure $! c `T.cons` cs
+    let !i = c `T.cons` cs
+    if i `S.member` reserved
+        then parseError $ err o (utoks i <> elabel "identifier")
+        else pure i
 {-# INLINE ident #-}
+
+
+reserved :: Set Text
+reserved = S.fromList
+    [ "let", "in", "end"
+    , "if", "then"
+    , "while", "for", "to", "do", "break"
+    , "of"
+    ]
+{-# NOINLINE reserved #-}
 
 
 integer :: Parser Int
@@ -105,21 +123,21 @@ located p = do
 
 prefix :: Text -> (LcExpr -> Expr) -> Operator Parser LcExpr
 prefix op f = Prefix $ do
-    A.At r _ <- located (symbol op)
+    A.At r _ <- lexeme $ located (chunk op)
     pure $ \e -> A.At r (f e)
 {-# INLINE prefix #-}
 
 
 binaryL :: Text -> (LcExpr -> LcExpr -> Expr) -> Operator Parser LcExpr
 binaryL op f = InfixL $ do
-    A.At r _ <- located (symbol op)
+    A.At r _ <- lexeme $ located (chunk op)
     pure $ \e1 e2 -> A.At r (f e1 e2)
 {-# INLINE binaryL #-}
 
 
 binaryN :: Text -> (LcExpr -> LcExpr -> Expr) -> Operator Parser LcExpr
 binaryN op f = InfixN $ do
-    A.At r _ <- located (symbol op)
+    A.At r _ <- lexeme $ located (chunk op)
     pure $ \e1 e2 -> A.At r (f e1 e2)
 {-# INLINE binaryN #-}
 
@@ -133,8 +151,8 @@ pLcExpr = choice
 
 pLcTypeId :: Parser LcType
 pLcTypeId = lexeme $ do
-    A.At r i <- located ident
-    pure $ A.At r (NameTy i)
+    i <- located ident
+    pure $! NameTy <$> i
 
 
 pVar :: Parser Expr
