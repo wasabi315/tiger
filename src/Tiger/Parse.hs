@@ -2,10 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Tiger.Parse
-    ( Parser
-    , pExpr
-    , pRecord_
-    , pArray_
+    ( module Tiger.Parse
     , module Text.Megaparsec
     , module Text.Megaparsec.Char
     ) where
@@ -13,6 +10,7 @@ module Tiger.Parse
 import           Control.Monad.Combinators.Expr
 import           Data.Char
 import           Data.Text                      (Text)
+import qualified Data.Text                      as T
 import           Data.Void
 import           Text.Megaparsec
 import           Text.Megaparsec.Char           hiding (string)
@@ -49,8 +47,9 @@ isValidIdentChar c = isAlphaNum c || c == '_'
 
 ident :: Parser Text
 ident = do
-    _ <- lookAhead letterChar
-    takeWhile1P Nothing isValidIdentChar
+    c  <- letterChar
+    cs <- takeWhile1P Nothing isValidIdentChar
+    pure $! c `T.cons` cs
 {-# INLINE ident #-}
 
 
@@ -59,19 +58,9 @@ integer = L.decimal
 {-# INLINE integer #-}
 
 
-float :: Parser Double
-float = L.float
-{-# INLINE float #-}
-
-
 string :: Parser Text
 string = between (char '\"') (char '\"') (takeWhile1P Nothing (/= '"'))
 {-# INLINE string #-}
-
-
-character :: Parser Char
-character = between (char '\'') (char '\'') anySingle
-{-# INLINE character #-}
 
 
 keyword :: Text -> Parser Text
@@ -152,17 +141,17 @@ pLvar_ :: Parser Expr_
 pLvar_ = fmap VarExpr . located $ do
     i <- ident
     rest (SimpleVar i)
-  where
-    rest v = choice
-        [ do
-            _ <- char '.'
-            f <- located ident
-            rest (FieldVar v f)
-        , brackets $ do
-            e <- pExpr
-            rest (SubscriptVar v e)
-        , pure v
-        ]
+    where
+        rest v = choice
+            [ do
+                _ <- char '.'
+                f <- located ident
+                rest (FieldVar v f)
+            , brackets $ do
+                e <- pExpr
+                rest (SubscriptVar v e)
+            , pure v
+            ]
 
 
 pValue :: Parser Expr
@@ -234,12 +223,12 @@ pRecord_ = do
     ty <- pTypeId
     fs <- braces $ kvPair `sepBy` comma
     pure (RecordExpr fs ty)
-  where
-    kvPair = do
-        f <- lexeme (located ident)
-        _ <- symbol "="
-        e <- pExpr
-        pure (f, e)
+    where
+        kvPair = do
+            f <- lexeme (located ident)
+            _ <- symbol "="
+            e <- pExpr
+            pure (f, e)
 
 
 pArray_ :: Parser Expr_
