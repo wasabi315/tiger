@@ -53,15 +53,14 @@ ident :: Parser Text
 ident = do
     o  <- getOffset
     c  <- letterChar
-    cs <- takeWhile1P Nothing isValidIdentChar
+    cs <- takeWhileP Nothing isValidIdentChar
     let !i = c `T.cons` cs
     if i `S.member` reserved
         then parseError $ err o (utoks i <> elabel "identifier")
         else pure i
-{-# INLINE ident #-}
 
 
-reserved :: Set Text
+reserved :: Set Symbol
 reserved = S.fromList
     [ "let", "in", "end"
     , "if", "then"
@@ -87,28 +86,19 @@ keyword k = chunk k <* notFollowedBy (satisfy isValidIdentChar)
 
 
 parens :: Parser a -> Parser a
-parens = between (symbol "(") (symbol ")")
+parens = between (char '(' *> sc) (sc <* char ')')
 {-# INLINE parens #-}
 
 
 braces :: Parser a -> Parser a
-braces = between (symbol "{") (symbol "}")
+braces = between (char '{' *> sc) (sc <* char '}')
 {-# INLINE braces #-}
 
 
 brackets :: Parser a -> Parser a
-brackets = between (symbol "[") (symbol "]")
+brackets = between (char '[' *> sc) (sc <* char ']')
 {-# INLINE brackets #-}
 
-
-semi :: Parser Text
-semi = symbol ";"
-{-# INLINE semi #-}
-
-
-comma :: Parser Text
-comma = symbol ","
-{-# INLINE comma #-}
 
 -------------------------------------------------------------------------------
 
@@ -150,13 +140,13 @@ pLcExpr = choice
 
 
 pLcTypeId :: Parser LcType
-pLcTypeId = lexeme $ do
+pLcTypeId = do
     i <- located ident
     pure $! NameTy <$> i
 
 
-pVar :: Parser Expr
-pVar = fmap VarExpr . located $ do
+pLcVar :: Parser LcVar
+pLcVar = located $ do
     i <- ident
     rest (NameVar i)
     where
@@ -173,7 +163,7 @@ pVar = fmap VarExpr . located $ do
 
 
 pValue :: Parser LcExpr
-pValue = lexeme $ makeExprParser pPrimary table
+pValue = makeExprParser pPrimary table
 
 
 table :: [[Operator Parser LcExpr]]
@@ -198,64 +188,50 @@ table =
     , [ binaryL "|"  (BopExpr OrOp)
       ]
     ]
+{-# NOINLINE table #-}
 
 
--- FIXME: Avoid try
 pPrimary :: Parser LcExpr
 pPrimary =
-    (lexeme . located $ choice
-        [ pUnit_
-        , try pNil_
-        , pInteger_
-        , pString_
-        , try pRecord_
-        , try pArray_
-        , try pCall_
-        , pVar
+    (located $ choice
+        [ UnitExpr <$ chunk "()"
+        , try (NilExpr <$ keyword "nil")
+        , IntExpr <$> integer
+        , StrExpr <$> string
+        -- FIXME: Avoid using try
+        , try pRecord
+        , try pArray
+        , try pCall
+        , VarExpr <$> pLcVar
         ])
     <|> parens pLcExpr
 
 
-pCall_ :: Parser Expr
-pCall_ =  do
+pCall :: Parser Expr
+pCall =  do
     i <- ident
-    args <- parens (pLcExpr `sepBy` comma)
+    args <- parens ((pLcExpr <* sc) `sepBy` symbol ",")
     pure (CallExpr i args)
 
 
-pUnit_ :: Parser Expr
-pUnit_ = UnitExpr <$ chunk "()"
-
-
-pNil_ :: Parser Expr
-pNil_ = NilExpr <$ keyword "nil"
-
-
-pInteger_ :: Parser Expr
-pInteger_ = IntExpr <$> integer
-
-
-pString_ :: Parser Expr
-pString_ = StrExpr <$> string
-
-
-pRecord_ :: Parser Expr
-pRecord_ = do
-    ty <- pLcTypeId
-    fs <- braces $ kvPair `sepBy` comma
-    pure (RecordExpr fs ty)
-    where
-        kvPair = do
+pRecord :: Parser Expr
+pRecord = do
+    ty <- lexeme pLcTypeId
+    fs <- braces
+        $ (do
             f <- lexeme (located ident)
             _ <- symbol "="
-            e <- pLcExpr
-            pure (f, e)
+            e <- pLcExpr <* sc
+            pure (f, e))
+        `sepBy`
+            symbol ","
+    pure (RecordExpr fs ty)
 
 
-pArray_ :: Parser Expr
-pArray_ = do
-    ty <- pLcTypeId
+pArray :: Parser Expr
+pArray = do
+    ty <- lexeme pLcTypeId
     e1 <- brackets pLcExpr
-    _  <- lexeme $ keyword "of"
+    _  <- lexeme (keyword "of")
     e2 <- pLcExpr
     pure (ArrayExpr ty e1 e2)
