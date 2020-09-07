@@ -44,7 +44,7 @@ data Expr
     | WhileExpr LcExpr LcExpr
     | ForExpr (A.Located Symbol) LcExpr LcExpr LcExpr
     | BreakExpr
-    | LetExpr [LcDec] LcExpr
+    | LetExpr [LcDec] [LcExpr]
     deriving ( Eq, Show )
 
 

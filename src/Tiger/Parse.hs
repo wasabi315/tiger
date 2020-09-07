@@ -134,9 +134,142 @@ binaryN op f = InfixN $ do
 -------------------------------------------------------------------------------
 
 pLcExpr :: Parser LcExpr
-pLcExpr = choice
-    [ pValue
+pLcExpr =
+    (located $ choice
+        [ try pLet
+        , try pIf
+        , try pWhile
+        , try pFor
+        , try (BreakExpr <$ keyword "break")
+        , try pSeq
+        , try pAssign
+        ])
+    <|> pValue
+
+
+pLet :: Parser Expr
+pLet = do
+    _  <- lexeme (keyword "let")
+    ds <- many (pLcDec <* sc)
+    _  <- lexeme (keyword "in")
+    es <- (pLcExpr <* sc) `sepBy` symbol ";"
+    _  <- lexeme (keyword "end")
+    pure (LetExpr ds es)
+
+
+pLcDec :: Parser LcDec
+pLcDec = choice
+    [ pLcTypeDec
+    , pLcVarDec
+    , pLcFuncDec
     ]
+
+
+pLcTypeDec :: Parser LcDec
+pLcTypeDec = located $ TypeDec <$> some
+    ((do
+        _  <- lexeme (keyword "type")
+        li <- lexeme (located ident)
+        _  <- symbol "="
+        ty <- pLcType
+        pure (li, ty))
+    <* sc)
+
+
+pLcType :: Parser LcType
+pLcType = choice
+    [ pLcTypeId
+    , located $ RecordTy <$> braces pTyFields
+    , located $ do
+        _ <- lexeme (keyword "array")
+        _ <- lexeme (keyword "of")
+        t <- pLcTypeId
+        pure (ArrayTy t)
+    ]
+
+
+pLcVarDec :: Parser LcDec
+pLcVarDec = located $ do
+    _ <- lexeme (keyword "var")
+    i <- lexeme ident
+    t <- optional . try $ do
+        _ <- symbol ":"
+        lexeme pLcTypeId
+    _ <- symbol ":="
+    e <- pLcExpr
+    pure (VarDec i t e)
+
+
+pLcFuncDec :: Parser LcDec
+pLcFuncDec = located $ FuncDec <$> some
+    (located (do
+        _  <- lexeme (keyword "function")
+        i  <- lexeme ident
+        ps <- parens pTyFields <* sc
+        t  <- optional $ do
+            _ <- symbol ":"
+            lexeme pLcTypeId
+        _  <- symbol "="
+        e  <- pLcExpr
+        pure (Func i ps t e))
+    <* sc)
+
+
+pTyFields :: Parser [(A.Located Symbol, LcType)]
+pTyFields =
+    do
+        li <- lexeme (located ident)
+        _  <- symbol ":"
+        ty <- pLcTypeId <* sc
+        pure (li, ty)
+    `sepBy1`
+        symbol ","
+
+
+pIf :: Parser Expr
+pIf = do
+    _  <- lexeme (keyword "if")
+    e1 <- pLcExpr <* sc
+    _  <- lexeme (keyword "then")
+    e2 <- pLcExpr <* sc
+    e3 <- optional $ do
+        _ <- lexeme (keyword "else")
+        pLcExpr
+    pure (IfExpr e1 e2 e3)
+
+
+pWhile :: Parser Expr
+pWhile = do
+    _  <- lexeme (keyword "while")
+    e1 <- pLcExpr <* sc
+    _  <- lexeme (keyword "do")
+    e2 <- pLcExpr
+    pure (WhileExpr e1 e2)
+
+
+pFor :: Parser Expr
+pFor = do
+    _  <- lexeme (keyword "for")
+    i  <- lexeme (located ident)
+    _  <- symbol ":="
+    e1 <- pLcExpr <* sc
+    _  <- lexeme (keyword "to")
+    e2 <- pLcExpr <* sc
+    _  <- lexeme (keyword "do")
+    e3 <- pLcExpr
+    pure (ForExpr i e1 e2 e3)
+
+
+pSeq :: Parser Expr
+pSeq = SeqExp <$> parens ((pLcExpr <* sc) `sepBy1` symbol ";")
+
+
+pAssign :: Parser Expr
+pAssign = do
+    lv <- pLcVar <* sc
+    _  <- symbol ":="
+    rv <- pLcExpr
+    pure (AssignExpr lv rv)
 
 
 pLcTypeId :: Parser LcType
@@ -163,7 +296,7 @@ pLcVar = located $ do
 
 
 pValue :: Parser LcExpr
-pValue = makeExprParser pPrimary table
+pValue = makeExprParser (pPrimary <* sc) table
 
 
 table :: [[Operator Parser LcExpr]]
