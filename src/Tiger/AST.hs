@@ -4,7 +4,7 @@
 module Tiger.AST
     ( Symbol
     , LcExpr, Expr (..)
-    , LcDec, Dec (..)
+    , LcDec (..)
     , LcVar, Var (..)
     , LcFunc, Func (..)
     , LcType, Type (..)
@@ -16,12 +16,12 @@ import           Data.Text                  (Text)
 
 import qualified Tiger.Reporting.Annotation as A
 
+-------------------------------------------------------------------------------
 
 type Symbol = Text
 
 
 type LcExpr = A.Located Expr
-type LcDec  = A.Located Dec
 type LcFunc = A.Located Func
 type LcVar  = A.Located Var
 type LcType = A.Located Type
@@ -29,7 +29,6 @@ type LcType = A.Located Type
 
 data Expr
     = NilExpr
-    | UnitExpr
     | IntExpr {-# UNPACK #-} Int
     | StrExpr Text
     | VarExpr LcVar
@@ -38,7 +37,7 @@ data Expr
     | BopExpr Bop LcExpr LcExpr
     | RecordExpr [(A.Located Symbol, LcExpr)] LcType
     | ArrayExpr LcType LcExpr LcExpr
-    | SeqExp [LcExpr]
+    | SeqExpr [LcExpr]
     | AssignExpr LcVar LcExpr
     | IfExpr LcExpr LcExpr (Maybe LcExpr)
     | WhileExpr LcExpr LcExpr
@@ -69,9 +68,9 @@ data Uop
     deriving ( Eq, Show )
 
 
-data Dec
+data LcDec
     = FuncDec [LcFunc]
-    | VarDec Symbol (Maybe LcType) LcExpr
+    | VarDec (A.Located Symbol) (Maybe LcType) LcExpr
     | TypeDec [(A.Located Symbol, LcType)]
     deriving ( Eq, Show )
 
@@ -84,7 +83,7 @@ data Var
 
 
 data Func = Func
-    { name   :: Symbol
+    { name   :: A.Located Symbol
     , params :: [(A.Located Symbol, LcType)]
     , result :: Maybe LcType
     , body   :: LcExpr

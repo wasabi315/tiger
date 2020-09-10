@@ -65,8 +65,7 @@ unary
     = [ "-" ] , primary ;
 
 primary
-    = "()"
-    | "nil"
+    = "nil"
     | integer
     | string
     | record
