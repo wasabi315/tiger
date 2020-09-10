@@ -9,17 +9,19 @@ module Tiger.Reporting.Annotation
     ) where
 
 
-import           Text.Megaparsec (SourcePos)
-
-
 data Located a = At Region a
     deriving ( Functor, Eq, Show )
 
 
-data Region = Region SourcePos SourcePos
-     deriving ( Eq, Show )
+type Pos = Int
 
 
-located :: SourcePos -> SourcePos -> a -> Located a
+data Region = Region
+    {-# UNPACK #-} Pos
+    {-# UNPACK #-} Pos
+    deriving ( Eq, Show )
+
+
+located :: Pos -> Pos -> a -> Located a
 located s e a = At (Region s e) a
 {-# INLINE located #-}

@@ -5,11 +5,10 @@
 {-# LANGUAGE RecordWildCards   #-}
 
 module Tiger.Parse
-    ( module Tiger.Parse
-    , module Text.Megaparsec
-    , module Text.Megaparsec.Char
+    ( Tiger.Parse.parse
     ) where
 
+import           Control.Exception              (SomeException (..))
 import           Control.Monad.Combinators.Expr
 import           Data.Char
 import           Data.Set                       (Set)
@@ -24,6 +23,13 @@ import           Text.Megaparsec.Error.Builder
 
 import           Tiger.AST
 import qualified Tiger.Reporting.Annotation     as A
+
+-------------------------------------------------------------------------------
+
+parse :: Text -> Either SomeException LcExpr
+parse input = case Text.Megaparsec.parse pTiger "" input of
+    Left  perr -> Left (SomeException perr)
+    Right expr -> Right expr
 
 -------------------------------------------------------------------------------
 
@@ -100,9 +106,9 @@ pad = between __ __
 
 located :: Parser a -> Parser (A.Located a)
 located p = do
-    s <- getSourcePos
+    s <- getOffset
     a <- p
-    e <- getSourcePos
+    e <- getOffset
     pure $! A.located s e a
 {-# INLINE located #-}
 
