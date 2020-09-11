@@ -5,8 +5,8 @@ module Tiger.Parsing.Unescape
     ( strLit
     ) where
 
-import           Control.Monad
 import           Data.Char
+import           Data.Maybe
 import           Data.Text                     (Text)
 import qualified Data.Text                     as T
 import           Text.Megaparsec
@@ -20,22 +20,13 @@ import           Tiger.Parsing.Primitives      (Parser)
 
 strLit :: Parser Text
 strLit = do
-    str <- between (char '"') (char '"') do
-        optional $ try skipFmtChar
-        many (strChar <* optional (try skipFmtChar))
-    pure $! T.pack str
+    str <- between (char '"') (char '"') (many strChar)
+    pure $! T.pack (catMaybes str)
 {-# INLINE strLit #-}
 
 
-skipFmtChar :: Parser ()
-skipFmtChar = void $ between
-    (char '\\')
-    (char '\\')
-    (takeWhileP Nothing (\c -> c `elem` (" \t\n\f" :: String)))
-
-
-strChar :: Parser Char
-strChar = strLetter <|> strEscape
+strChar :: Parser (Maybe Char)
+strChar = fmap Just strLetter <|> strEscape
 {-# INLINE strChar #-}
 
 
@@ -44,10 +35,15 @@ strLetter = satisfy (\c -> c `notElem` ("\"\\\026" :: String))
 {-# INLINE strLetter #-}
 
 
-strEscape :: Parser Char
+strEscape :: Parser (Maybe Char)
 strEscape = do
     char '\\'
-    charEsc <|> charCtrl <|> charNum
+    choice
+        [ Just <$> charEsc
+        , Just <$> charCtrl
+        , Just <$> charNum
+        , charSkip
+        ]
 
 
 charEsc :: Parser Char
@@ -73,3 +69,9 @@ charNum = do
     if d > 0 && d < 128
         then pure $! chr d
         else parseError $ err o (ulabel "invalid ascii code")
+
+
+charSkip :: Parser (Maybe a)
+charSkip = Nothing <$ do
+    takeWhileP Nothing (\c -> c `elem` (" \t\n\f" :: String))
+    char '\\'
