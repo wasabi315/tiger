@@ -10,11 +10,13 @@ copyright:           2020 Author name here
 category:            Web
 extra-source-files:
   - README.md
-  - src/Tokens.x
 
 dependencies:
   - base >= 4.7 && < 5
-  - array
+  - containers
+  - megaparsec
+  - text
+  - parser-combinators
 
 library:
   source-dirs: src
@@ -23,7 +25,5 @@ executables:
   tiger:
     source-dirs:      app
     main:             Main.hs
-    system-build-tools:
-      - alex
     dependencies:
       - tiger
