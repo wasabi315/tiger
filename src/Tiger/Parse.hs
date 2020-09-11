@@ -48,13 +48,23 @@ isValidIdentChar c = isAlphaNum c || c == '_'
 
 
 ident :: Parser Text
-ident = do
+ident = ident' "identifier"
+{-# INLINE ident #-}
+
+
+typeId :: Parser Text
+typeId = ident' "type name"
+{-# INLINE typeId #-}
+
+
+ident' :: String -> Parser Text
+ident' s = do
     o  <- getOffset
     c  <- letterChar
     cs <- takeWhileP Nothing isValidIdentChar
     let !i = c `T.cons` cs
     if i `S.member` reserved
-        then parseError $ err o (utoks i <> elabel "identifier")
+        then parseError $ err o (utoks i <> elabel s)
         else pure i
 
 
@@ -182,7 +192,7 @@ pLcTypeDec :: Parser LcDec
 pLcTypeDec = TypeDec <$> sepBySpaces1 do
     keyword "type"
     __
-    tname <- located ident
+    tname <- located typeId
     __
     char '='
     __
@@ -202,6 +212,12 @@ pLcType = choice
         tname <- pLcTypeId
         pure (ArrayTy tname)
     ]
+
+
+pLcTypeId :: Parser LcType
+pLcTypeId = do
+    tname <- located typeId
+    pure $! NameTy <$> tname
 
 
 pTyFields :: Parser [(A.Located Symbol, LcType)]
@@ -317,12 +333,6 @@ pAssign = located do
     pure (AssignExpr lvalue expr)
 
 
-pLcTypeId :: Parser LcType
-pLcTypeId = do
-    tname <- located ident
-    pure $! NameTy <$> tname
-
-
 pLcVar :: Parser LcVar
 pLcVar = located do
     vname <- ident
@@ -404,7 +414,7 @@ pRecord = do
             __
             pure (fname, expr)
         `sepBy`
-            (char ',' *> __))
+            (char ',' <* __))
     pure (RecordExpr fields ty)
 
 
