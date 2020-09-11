@@ -4,38 +4,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
-module Tiger.Parse
-    ( Tiger.Parse.parse
+module Tiger.Parsing.Expr
+    ( pTiger
     ) where
 
-import           Control.Exception              (SomeException (..))
 import           Control.Monad.Combinators.Expr
 import           Data.Char
 import           Data.Set                       (Set)
 import qualified Data.Set                       as S
 import           Data.Text                      (Text)
 import qualified Data.Text                      as T
-import           Data.Void
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer     as L
 import           Text.Megaparsec.Error.Builder
 
 import           Tiger.AST
+import           Tiger.Parsing.Primitives
+import           Tiger.Parsing.Unescape
 import qualified Tiger.Reporting.Annotation     as A
 
 -------------------------------------------------------------------------------
 
-parse :: Text -> Either SomeException LcExpr
-parse input = case Text.Megaparsec.parse pTiger "" input of
-    Left  perr -> Left (SomeException perr)
-    Right expr -> Right expr
-
--------------------------------------------------------------------------------
-
-type Parser = Parsec Void Text
-
--------------------------------------------------------------------------------
 
 __ :: Parser ()
 __ = L.space space1 empty (L.skipBlockComment "/*" "*/")
@@ -83,11 +73,6 @@ intLit = L.decimal
 {-# INLINE intLit #-}
 
 
-strLit :: Parser Text
-strLit = between (char '\"') (char '\"') (takeWhile1P Nothing (/= '"'))
-{-# INLINE strLit #-}
-
-
 keyword :: Text -> Parser Text
 keyword k = try $ string k <* notFollowedBy (satisfy isValidIdentChar)
 {-# INLINE keyword #-}
@@ -113,15 +98,6 @@ pad = between __ __
 {-# INLINE pad #-}
 
 -------------------------------------------------------------------------------
-
-located :: Parser a -> Parser (A.Located a)
-located p = do
-    s <- getOffset
-    a <- p
-    e <- getOffset
-    pure $! A.located s e a
-{-# INLINE located #-}
-
 
 prefix :: Text -> (LcExpr -> Expr) -> Operator Parser LcExpr
 prefix op f = Prefix do
