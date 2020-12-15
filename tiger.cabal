@@ -1,0 +1,57 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 99607f26e1c908890bbc3eba624bb013a8a16c747540033e1516048dc7fc1d11
+
+name:           tiger
+version:        0.1.0.0
+category:       Web
+homepage:       https://github.com/githubuser/tiger#readme
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2020 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+
+library
+  other-modules:
+      Paths_tiger
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+executable tiger
+  main-is: Main.hs
+  other-modules:
+      Paths_tiger
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , tiger
+  default-language: Haskell2010
+
+test-suite tiger-test
+  type: exitcode-stdio-1.0
+  main-is: Tasty.hs
+  other-modules:
+      Paths_tiger
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+    , tasty
+    , tasty-discover
+    , tiger
+  default-language: Haskell2010
