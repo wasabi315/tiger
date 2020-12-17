@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ec0a110bf8fff32a9a0fb34f9ac15443cbe739f74199d2ee6d025869899702c1
+-- hash: ee2e1ce93f1a311384e72f1e856eb75399dc01ed1af58a767a2a4c12872ca2e9
 
 name:           tiger
 version:        0.1.0.0
@@ -21,7 +21,9 @@ extra-source-files:
 
 library
   exposed-modules:
+      Data.Symbol
       Tiger.Reporting.Annotation
+      Tiger.Syntax.AST
   other-modules:
       Paths_tiger
   hs-source-dirs:
@@ -29,7 +31,9 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , hashable
     , megaparsec
+    , text
   default-language: Haskell2010
 
 executable tiger
@@ -41,7 +45,9 @@ executable tiger
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , hashable
     , megaparsec
+    , text
     , tiger
   default-language: Haskell2010
 
@@ -56,9 +62,11 @@ test-suite tiger-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , hashable
     , megaparsec
     , tasty
     , tasty-discover
     , tasty-hunit
+    , text
     , tiger
   default-language: Haskell2010
