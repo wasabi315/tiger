@@ -49,7 +49,7 @@ data Expr
 
 data Var
     = VName Symbol
-    | VFld LcVar (Located Symbol)
+    | VField LcVar (Located Symbol)
     | VIxed LcVar LcExpr
     deriving (Show)
 
