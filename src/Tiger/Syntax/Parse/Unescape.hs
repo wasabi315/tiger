@@ -55,8 +55,41 @@ str = dquotes (go mempty)
                 -- control character: \^c
                 , do
                     char '^'
-                    c <- upperChar
-                    pure $! chr (ord c - ord 'A' + 1)
+                    choice
+                        [ '\000' <$ char '@'
+                        , '\001' <$ char 'A'
+                        , '\002' <$ char 'B'
+                        , '\003' <$ char 'C'
+                        , '\004' <$ char 'D'
+                        , '\005' <$ char 'E'
+                        , '\006' <$ char 'F'
+                        , '\007' <$ char 'G'
+                        , '\008' <$ char 'H'
+                        , '\009' <$ char 'I'
+                        , '\010' <$ char 'J'
+                        , '\011' <$ char 'K'
+                        , '\012' <$ char 'L'
+                        , '\013' <$ char 'M'
+                        , '\014' <$ char 'N'
+                        , '\015' <$ char 'O'
+                        , '\016' <$ char 'P'
+                        , '\017' <$ char 'Q'
+                        , '\018' <$ char 'R'
+                        , '\019' <$ char 'S'
+                        , '\020' <$ char 'T'
+                        , '\021' <$ char 'U'
+                        , '\022' <$ char 'V'
+                        , '\023' <$ char 'W'
+                        , '\024' <$ char 'X'
+                        , '\025' <$ char 'Y'
+                        , '\026' <$ char 'Z'
+                        , '\027' <$ char '['
+                        , '\028' <$ char '\\'
+                        , '\029' <$ char ']'
+                        , '\030' <$ char '^'
+                        , '\031' <$ char '_'
+                        , '\127' <$ char '?'
+                        ]
 
                 -- ascii code: \ddd
                 , do
