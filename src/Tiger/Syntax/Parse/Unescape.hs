@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
 
-{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE BlockArguments   #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Tiger.Syntax.Parse.Unescape
     ( str
@@ -57,32 +58,12 @@ str = dquotes (go mempty)
                     char '^'
                     choice
                         [ '\000' <$ char '@'
-                        , '\001' <$ char 'A'
-                        , '\002' <$ char 'B'
-                        , '\003' <$ char 'C'
-                        , '\004' <$ char 'D'
-                        , '\005' <$ char 'E'
-                        , '\006' <$ char 'F'
-                        , '\007' <$ char 'G'
-                        , '\008' <$ char 'H'
-                        , '\009' <$ char 'I'
-                        , '\010' <$ char 'J'
-                        , '\011' <$ char 'K'
-                        , '\012' <$ char 'L'
-                        , '\013' <$ char 'M'
-                        , '\014' <$ char 'N'
-                        , '\015' <$ char 'O'
-                        , '\016' <$ char 'P'
-                        , '\017' <$ char 'Q'
-                        , '\018' <$ char 'R'
-                        , '\019' <$ char 'S'
-                        , '\020' <$ char 'T'
-                        , '\021' <$ char 'U'
-                        , '\022' <$ char 'V'
-                        , '\023' <$ char 'W'
-                        , '\024' <$ char 'X'
-                        , '\025' <$ char 'Y'
-                        , '\026' <$ char 'Z'
+
+                        -- '\001' to '\026'
+                        , do
+                            c <- upperChar
+                            pure $! chr (ord c - ord 'A' + ord '\001')
+
                         , '\027' <$ char '['
                         , '\028' <$ char '\\'
                         , '\029' <$ char ']'
@@ -93,20 +74,12 @@ str = dquotes (go mempty)
 
                 -- ascii code: \ddd
                 , do
-                    o  <- getOffset
-
-                    d1 <- digitChar
-                    d2 <- digitChar
-                    d3 <- digitChar
-                    let n = read (d1:d2:d3:"") :: Int
-
+                    o <- getOffset
+                    n <- read @Int <$> replicateM 3 digitChar
                     when (n >= 128) do
                         parseError $ err o (ulabel "invalid ascii code")
                     pure $! chr n
                 ]
 
         escSkip :: Parser ()
-        escSkip =
-            void do
-                takeWhile1P Nothing (`elem` (" \t\n\f" :: String))
-                char '\\'
+        escSkip = space1 <* char '\\'
