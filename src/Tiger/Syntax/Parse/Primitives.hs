@@ -24,6 +24,7 @@ import           Text.Megaparsec.Char          hiding (space)
 import qualified Text.Megaparsec.Char.Lexer    as L
 import           Text.Megaparsec.Error.Builder
 
+import           Data.Symbol
 import           Tiger.Reporting.Annotation
 import           Tiger.Syntax.Parse
 
@@ -35,7 +36,7 @@ space = L.space space1 empty (L.skipBlockComment "/*" "*/")
 --------------------------------------------------------------------------------
 
 -- identifier: [a-z][a-zA-Z0-9_]*
-ident :: Parser T.Text
+ident :: Parser Symbol
 ident = do
     off <- getOffset
 
@@ -45,7 +46,7 @@ ident = do
     when (id' `S.member` reserved) do
         parseError $ err off (utoks id' <> elabel "identifier")
 
-    pure id'
+    pure $! symbol id'
 
 
 keyword :: T.Text -> Parser ()

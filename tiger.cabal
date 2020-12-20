@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c97424d3649613eeda8d578cbd9c1ca06dbfeab6cfe5f8aacd19f540ab206b88
+-- hash: 4ab83e937476925d38120c9f16bf75aeafdc6d35927c7c9389244b52ba8b9e1a
 
 name:           tiger
 version:        0.1.0.0
@@ -24,7 +24,9 @@ library
       Data.Symbol
       Tiger.Reporting.Annotation
       Tiger.Syntax.AST
-      Tiger.Syntax.Parse.Parser
+      Tiger.Syntax.Parse
+      Tiger.Syntax.Parse.Primitives
+      Tiger.Syntax.Parse.Unescape
   other-modules:
       Paths_tiger
   hs-source-dirs:
@@ -32,6 +34,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , containers
     , hashable
     , megaparsec
     , text
@@ -46,6 +49,7 @@ executable tiger
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , containers
     , hashable
     , megaparsec
     , text
@@ -57,12 +61,14 @@ test-suite tiger-test
   main-is: Tasty.hs
   other-modules:
       Tiger.Test.Reporting.Annotation
+      Tiger.Test.Syntax.Parse.Unescape
       Paths_tiger
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , containers
     , hashable
     , megaparsec
     , tasty
