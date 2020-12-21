@@ -33,6 +33,10 @@ test_str =
             parse str "" "\"He said \\\"Hello.\\\"\""
                 @?= Right "He said \"Hello.\""
 
+        , testCase "parse \"\\^[\\^A\\^A\\^?\"" do
+            parse str "" "\"\\^[\\^A\\^@\\^?\""
+                @?= Right "\027\001\000\127"
+
         , testCase "parse \"\\088\\089\\090\"" do
             parse str "" "\"\\088\\089\\090\""
                 @?= Right "\088\089\090"
