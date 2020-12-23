@@ -2,6 +2,8 @@
 
 module Tiger.Syntax.AST
     ( Expr(..)
+    , Unop(..)
+    , Binop(..)
     , Var(..)
     , Type(..)
     , Decl(..)
@@ -64,7 +66,7 @@ data Binop
     | Sub
     | Mul
     | Div
-    | Eq_
+    | Eq'
     | Neq
     | Lt
     | Le
