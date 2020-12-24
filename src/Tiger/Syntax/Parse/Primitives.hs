@@ -87,4 +87,4 @@ located p = do
     s <- getOffset
     a <- p
     e <- getOffset
-    pure $! at (pos s) (pos e) a
+    pure $! at s e a

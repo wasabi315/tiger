@@ -3,8 +3,6 @@
 
 module Tiger.Reporting.Annotation
     ( Pos
-    , pos
-    , unPos
     , Region (..)
     , Located (..)
     , at
@@ -12,13 +10,7 @@ module Tiger.Reporting.Annotation
 
 --------------------------------------------------------------------------------
 
-import           Text.Megaparsec.Pos
-
---------------------------------------------------------------------------------
-
-pos :: Int -> Pos
-pos = mkPos
-{-# INLINE pos #-}
+type Pos = Int
 
 --------------------------------------------------------------------------------
 
