@@ -25,6 +25,7 @@ dependencies:
   - containers
   - hashable
   - megaparsec
+  - parser-combinators
   - text
 
 library:

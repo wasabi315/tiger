@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4ab83e937476925d38120c9f16bf75aeafdc6d35927c7c9389244b52ba8b9e1a
+-- hash: a97732fc2e9fe0b87e68c8d9db50816241ba44d3e8bebb61ab2795d4630c1671
 
 name:           tiger
 version:        0.1.0.0
@@ -25,6 +25,7 @@ library
       Tiger.Reporting.Annotation
       Tiger.Syntax.AST
       Tiger.Syntax.Parse
+      Tiger.Syntax.Parse.Expr
       Tiger.Syntax.Parse.Primitives
       Tiger.Syntax.Parse.Unescape
   other-modules:
@@ -37,6 +38,7 @@ library
     , containers
     , hashable
     , megaparsec
+    , parser-combinators
     , text
   default-language: Haskell2010
 
@@ -52,6 +54,7 @@ executable tiger
     , containers
     , hashable
     , megaparsec
+    , parser-combinators
     , text
     , tiger
   default-language: Haskell2010
@@ -71,6 +74,7 @@ test-suite tiger-test
     , containers
     , hashable
     , megaparsec
+    , parser-combinators
     , tasty
     , tasty-discover
     , tasty-hunit
