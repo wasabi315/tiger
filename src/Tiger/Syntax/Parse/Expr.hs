@@ -85,6 +85,7 @@ term =
         [ located (Int <$> int)
         , located (Str <$> str)
         , if_
+        , while
         ]
 
 --------------------------------------------------------------------------------
@@ -103,4 +104,19 @@ if_ = located do
         keyword "else"
         __
         expr
+
     pure $ If e1 e2 e3
+
+--------------------------------------------------------------------------------
+
+while :: Parser LcExpr
+while = located do
+    keyword "while"
+    __
+    e1 <- expr
+    __
+    keyword "do"
+    __
+    e2 <- expr
+
+    pure $ While e1 e2
