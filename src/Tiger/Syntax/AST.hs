@@ -66,7 +66,7 @@ data Binop
     | Sub
     | Mul
     | Div
-    | Eq'
+    | Eq_
     | Neq
     | Lt
     | Le

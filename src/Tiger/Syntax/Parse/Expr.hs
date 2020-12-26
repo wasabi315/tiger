@@ -39,7 +39,7 @@ expr = makeExprParser (space *> term <* space) table
               , infixL  "-"  (Binop Sub)
               ]
 
-            , [ infixN  "="  (Binop Eq')
+            , [ infixN  "="  (Binop Eq_)
               , infixN  "<>" (Binop Neq)
               , infixN  ">=" (Binop Ge)
               , infixN  ">"  (Binop Gt)
@@ -84,4 +84,23 @@ term =
     choice
         [ located (Int <$> int)
         , located (Str <$> str)
+        , if_
         ]
+
+--------------------------------------------------------------------------------
+
+if_ :: Parser LcExpr
+if_ = located do
+    keyword "if"
+    __
+    e1 <- expr
+    __
+    keyword "then"
+    __
+    e2 <- expr
+    e3 <- optional do
+        __
+        keyword "else"
+        __
+        expr
+    pure $ If e1 e2 e3

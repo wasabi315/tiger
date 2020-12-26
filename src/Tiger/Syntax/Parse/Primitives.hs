@@ -4,6 +4,7 @@
 module Tiger.Syntax.Parse.Primitives
     ( located
     , space
+    , __
     , ident
     , keyword
     , int
@@ -32,6 +33,10 @@ import           Tiger.Syntax.Parse
 
 space :: Parser ()
 space = L.space space1 empty (L.skipBlockComment "/*" "*/")
+
+
+__ :: Parser ()
+__ = space
 
 --------------------------------------------------------------------------------
 
