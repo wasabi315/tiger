@@ -12,6 +12,7 @@ module Tiger.Syntax.Parse.Primitives
     , braces
     , brackets
     , dquotes
+    , semi
     ) where
 
 --------------------------------------------------------------------------------
@@ -84,6 +85,11 @@ parens   = between (char '(')  (char ')')
 braces   = between (char '{')  (char '}')
 brackets = between (char '[')  (char ']')
 dquotes  = between (char '\"') (char '\"')
+
+--------------------------------------------------------------------------------
+
+semi :: Parser ()
+semi = void (char ';')
 
 --------------------------------------------------------------------------------
 

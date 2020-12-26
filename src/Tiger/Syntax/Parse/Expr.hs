@@ -87,6 +87,7 @@ term =
         , if_
         , while
         , break_
+        , seq_
         ]
 
 --------------------------------------------------------------------------------
@@ -125,3 +126,8 @@ while = located do
 
 break_ :: Parser LcExpr
 break_ = located $ Break <$ keyword "break"
+
+--------------------------------------------------------------------------------
+
+seq_ :: Parser LcExpr
+seq_ = located $ parens (Seq <$> expr `sepBy` semi)
