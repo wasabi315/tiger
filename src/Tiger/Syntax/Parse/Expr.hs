@@ -10,22 +10,19 @@ module Tiger.Syntax.Parse.Expr
 --------------------------------------------------------------------------------
 
 import           Control.Monad.Combinators.Expr
+import           Text.Megaparsec
 import           Text.Megaparsec.Char           hiding (space)
 
 import           Tiger.Reporting.Annotation
 import           Tiger.Syntax.AST
 import           Tiger.Syntax.Parse
 import           Tiger.Syntax.Parse.Primitives
+import           Tiger.Syntax.Parse.Unescape
 
 --------------------------------------------------------------------------------
 
 expr :: Parser LcExpr
-expr = ops
-
---------------------------------------------------------------------------------
-
-ops :: Parser LcExpr
-ops = makeExprParser (space *> located (Int <$> int) <* space) table
+expr = makeExprParser (space *> term <* space) table
     where
         table :: [[Operator Parser LcExpr]]
         table =
@@ -78,3 +75,13 @@ ops = makeExprParser (space *> located (Int <$> int) <* space) table
             InfixL do
                 At r _ <- located (string op)
                 pure $ \el er -> At r (f el er)
+
+
+--------------------------------------------------------------------------------
+
+term :: Parser LcExpr
+term =
+    choice
+        [ located (Int <$> int)
+        , located (Str <$> str)
+        ]
