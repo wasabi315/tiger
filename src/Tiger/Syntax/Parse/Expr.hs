@@ -86,6 +86,7 @@ term =
         , located (Str <$> str)
         , if_
         , while
+        , break_
         ]
 
 --------------------------------------------------------------------------------
@@ -120,3 +121,7 @@ while = located do
     e2 <- expr
 
     pure $ While e1 e2
+
+
+break_ :: Parser LcExpr
+break_ = located $ Break <$ keyword "break"
