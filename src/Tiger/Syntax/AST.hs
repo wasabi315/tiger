@@ -37,8 +37,8 @@ data Expr
     | Call (Located Symbol) [LcExpr]
     | Unop Unop LcExpr
     | Binop Binop LcExpr LcExpr
-    | Record [(Located Symbol, LcExpr)]
-    | Array LcType LcExpr [LcExpr]
+    | Record (Located Symbol) [(Located Symbol, LcExpr)]
+    | Array (Located Symbol) LcExpr LcExpr
     | Seq [LcExpr]
     | Assign LcVar LcExpr
     | If LcExpr LcExpr (Maybe LcExpr)
