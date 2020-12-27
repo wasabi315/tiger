@@ -82,12 +82,20 @@ expr = makeExprParser (space *> term <* space) table
 term :: Parser LcExpr
 term =
     choice
-        [ located (Int <$> int)
-        , located (Str <$> str)
+        [ literal
         , if_
         , while
         , break_
         , seq_
+        ]
+
+--------------------------------------------------------------------------------
+
+literal :: Parser LcExpr
+literal =
+    choice
+        [ located (Int <$> int)
+        , located (Str <$> str)
         ]
 
 --------------------------------------------------------------------------------
