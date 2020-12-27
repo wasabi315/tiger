@@ -97,7 +97,22 @@ literal =
         [ located (Nil <$ keyword "nil")
         , located (Int <$> int)
         , located (Str <$> str)
+        , array
         ]
+
+
+array :: Parser LcExpr
+array = located do
+    ty <- located ident
+    __
+    e1 <- brackets (space *> expr <* space)
+    __
+    keyword "of"
+    __
+    e2 <- expr
+
+    pure $ Array ty e1 e2
+
 
 --------------------------------------------------------------------------------
 
