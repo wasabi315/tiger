@@ -82,13 +82,14 @@ expr = makeExprParser (space *> term <* space) table
 term :: Parser LcExpr
 term =
     choice
-        [ try literal
+        [ let_
         , if_
         , while
         , for
         , break_
         , seq_
         , try assign
+        , try literal
         , located (Var <$> var)
         ]
 
@@ -154,6 +155,27 @@ var = do
 
                 , pure v
                 ]
+
+--------------------------------------------------------------------------------
+
+let_ :: Parser LcExpr
+let_ =
+    located do
+        keyword "let"
+        __
+        ds <- many (decl <* space)
+        keyword "in"
+        __
+        es <- expr `sepBy` semi
+        __
+        keyword "end"
+        pure $ Let ds es
+
+
+decl :: Parser LcDecl
+decl =
+    choice
+        []
 
 --------------------------------------------------------------------------------
 
