@@ -82,11 +82,13 @@ expr = makeExprParser (space *> term <* space) table
 term :: Parser LcExpr
 term =
     choice
-        [ literal
+        [ try literal
         , if_
         , while
         , break_
         , seq_
+        , try assign
+        , located (Var <$> var)
         ]
 
 --------------------------------------------------------------------------------
@@ -97,7 +99,6 @@ literal =
         [ located (Nil <$ keyword "nil")
         , located (Int <$> int)
         , located (Str <$> str)
-        , located (Var <$> var)
         , arrayOrRecord
         ]
 
@@ -194,3 +195,15 @@ break_ = located $ Break <$ keyword "break"
 
 seq_ :: Parser LcExpr
 seq_ = located $ parens (Seq <$> expr `sepBy` semi)
+
+--------------------------------------------------------------------------------
+
+assign :: Parser LcExpr
+assign =
+    located do
+        v <- located var
+        __
+        keyword ":="
+        __
+        e <- expr
+        pure $ Assign v e
