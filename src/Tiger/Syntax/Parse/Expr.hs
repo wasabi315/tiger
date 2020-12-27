@@ -85,6 +85,7 @@ term =
         [ try literal
         , if_
         , while
+        , for
         , break_
         , seq_
         , try assign
@@ -186,6 +187,27 @@ while =
         __
         e2 <- expr
         pure $ While e1 e2
+
+
+for :: Parser LcExpr
+for =
+    located do
+        keyword "for"
+        __
+        s <- located ident
+        __
+        keyword ":="
+        __
+        e1 <- expr
+        __
+        keyword "to"
+        __
+        e2 <- expr
+        __
+        keyword "do"
+        __
+        e3 <- expr
+        pure $ For s e1 e2 e3
 
 
 break_ :: Parser LcExpr
