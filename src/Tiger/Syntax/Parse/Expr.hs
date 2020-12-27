@@ -94,7 +94,8 @@ term =
 literal :: Parser LcExpr
 literal =
     choice
-        [ located (Int <$> int)
+        [ located (Nil <$ keyword "nil")
+        , located (Int <$> int)
         , located (Str <$> str)
         ]
 
