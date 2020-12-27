@@ -97,55 +97,72 @@ literal =
         [ located (Nil <$ keyword "nil")
         , located (Int <$> int)
         , located (Str <$> str)
-        , array
+        , arrayOrRecord
         ]
 
 
-array :: Parser LcExpr
-array = located do
-    ty <- located ident
-    __
-    e1 <- brackets (space *> expr <* space)
-    __
-    keyword "of"
-    __
-    e2 <- expr
+arrayOrRecord :: Parser LcExpr
+arrayOrRecord =
+    located do
+        ty <- located ident
+        __
+        choice
+            [ do
+                e1 <- brackets (space *> expr <* space)
+                __
+                keyword "of"
+                __
+                e2 <- expr
+                pure $ Array ty e1 e2
 
-    pure $ Array ty e1 e2
+            , do
+                fs <- braces $ (space *> field <* space) `sepBy` comma
+                pure $ Record ty fs
+            ]
 
+    where
+        field = do
+            fname <- located ident
+            __
+            keyword "="
+            __
+            e <- expr
+            pure (fname, e)
 
 --------------------------------------------------------------------------------
 
 if_ :: Parser LcExpr
-if_ = located do
-    keyword "if"
-    __
-    e1 <- expr
-    __
-    keyword "then"
-    __
-    e2 <- expr
-    e3 <- optional do
+if_ =
+    located do
+        keyword "if"
         __
-        keyword "else"
+        e1 <- expr
         __
-        expr
+        keyword "then"
+        __
+        e2 <- expr
+        e3 <- optional do
+            __
+            keyword "else"
+            __
+            expr
 
-    pure $ If e1 e2 e3
+        pure $ If e1 e2 e3
 
 --------------------------------------------------------------------------------
 
 while :: Parser LcExpr
-while = located do
-    keyword "while"
-    __
-    e1 <- expr
-    __
-    keyword "do"
-    __
-    e2 <- expr
+while =
+    located do
+        keyword "while"
+        __
+        e1 <- expr
+        __
+        keyword "do"
+        __
+        e2 <- expr
 
-    pure $ While e1 e2
+        pure $ While e1 e2
 
 
 break_ :: Parser LcExpr
