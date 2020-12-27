@@ -97,6 +97,7 @@ literal =
         [ located (Nil <$ keyword "nil")
         , located (Int <$> int)
         , located (Str <$> str)
+        , located (Var <$> var)
         , arrayOrRecord
         ]
 
@@ -131,6 +132,29 @@ arrayOrRecord =
 
 --------------------------------------------------------------------------------
 
+var :: Parser Var
+var = do
+    lcv <- located (VName <$> ident)
+    rest lcv
+
+    where
+        rest :: LcVar -> Parser Var
+        rest lcv@(At r1 v) =
+            choice
+                [ do
+                    dot
+                    f@(At r2 _) <- located ident
+                    rest $ At (r1 <> r2) (VField lcv f)
+
+                , do
+                    At r2 e <- located $ brackets (space *> expr <* space)
+                    rest $ At (r1 <> r2) (VIxed lcv e)
+
+                , pure v
+                ]
+
+--------------------------------------------------------------------------------
+
 if_ :: Parser LcExpr
 if_ =
     located do
@@ -146,7 +170,6 @@ if_ =
             keyword "else"
             __
             expr
-
         pure $ If e1 e2 e3
 
 --------------------------------------------------------------------------------
@@ -161,7 +184,6 @@ while =
         keyword "do"
         __
         e2 <- expr
-
         pure $ While e1 e2
 
 
