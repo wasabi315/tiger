@@ -1,14 +1,7 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
---
--- see: https://github.com/sol/hpack
---
--- hash: a97732fc2e9fe0b87e68c8d9db50816241ba44d3e8bebb61ab2795d4630c1671
-
 name:           tiger
 version:        0.1.0.0
-category:       Web
 homepage:       https://github.com/githubuser/tiger#readme
 author:         Author name here
 maintainer:     example@example.com
