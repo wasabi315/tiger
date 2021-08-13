@@ -1,57 +1,95 @@
-cabal-version: 1.12
+cabal-version:      2.4
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
---
--- see: https://github.com/sol/hpack
---
--- hash: 99607f26e1c908890bbc3eba624bb013a8a16c747540033e1516048dc7fc1d11
+name:               tiger
+version:            0.1.0.0
+synopsis:           "Modern Compiler Implementation in ML" in Haskell
+category:           Language
+homepage:           https://github.com/wasabi315/tiger
+bug-reports:        https://github.com/wasabi315/tiger
+author:             wasabi315
+maintainer:         wasabi.nvim.st@gmail.com
+copyright:          (c) 2021 Satoshi Takimoto
+license:            MIT
+license-file:       LICENSE
 
-name:           tiger
-version:        0.1.0.0
-category:       Web
-homepage:       https://github.com/githubuser/tiger#readme
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2020 Author name here
-license:        BSD3
-license-file:   LICENSE
-build-type:     Simple
-extra-source-files:
-    README.md
+extra-source-files: CHANGELOG.md
+
+common defaults
+  default-language: Haskell2010
+  ghc-options:
+    -Wall
+    -Wcompat
+    -Wincomplete-record-updates
+    -Wincomplete-uni-patterns
+    -Wredundant-constraints
+    -O1
+  default-extensions:
+    -- Adopted from the GHC2021 language extension <https://github.com/ghc-proposals/ghc-proposals/blob/master/proposals/0380-ghc2021.rst> and the rio library's recommendation <https://github.com/commercialhaskell/rio#language-extensions>
+    EmptyCase
+    PostfixOperators
+    TupleSections
+    ImportQualifiedPost
+    NamedFieldPuns
+    RecordWildCards
+    BangPatterns
+    LambdaCase
+    MultiWayIf
+    ViewPatterns
+    BinaryLiterals
+    HexFloatLiterals
+    NumericUnderscores
+    OverloadedStrings
+    GADTs
+    RankNTypes
+    TypeApplications
+    PolyKinds
+    StandaloneKindSignatures
+    ExistentialQuantification
+    TypeOperators
+    ConstraintKinds
+    TypeFamilies
+    ExplicitForAll
+    PartialTypeSignatures
+    KindSignatures
+    NamedWildCards
+    ScopedTypeVariables
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    MultiParamTypeClasses
+    ConstrainedClassMethods
+    InstanceSigs
+    TypeSynonymInstances
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveTraversable
+    StandaloneDeriving
+    EmptyDataDeriving
+    DeriveLift
+    GeneralisedNewtypeDeriving
+    DeriveGeneric
 
 library
-  other-modules:
-      Paths_tiger
-  hs-source-dirs:
-      src
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
+  import: defaults
+  hs-source-dirs: src
   build-depends:
-      base >=4.7 && <5
-  default-language: Haskell2010
+    base ^>=4.14.2.0
+  exposed-modules:
+    MyLib
 
 executable tiger
+  import: defaults
+  hs-source-dirs: app
   main-is: Main.hs
-  other-modules:
-      Paths_tiger
-  hs-source-dirs:
-      app
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
-    , tiger
-  default-language: Haskell2010
+    base ^>=4.14.2.0,
+    tiger
 
 test-suite tiger-test
+  import: defaults
+  hs-source-dirs: test
+  main-is: MyLibTest.hs
   type: exitcode-stdio-1.0
-  main-is: Tasty.hs
-  other-modules:
-      Paths_tiger
-  hs-source-dirs:
-      test
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
-    , tasty
-    , tasty-discover
-    , tiger
-  default-language: Haskell2010
+    base ^>=4.14.2.0

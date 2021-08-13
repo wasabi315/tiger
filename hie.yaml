@@ -1,0 +1,10 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:tiger"
+
+    - path: "app/Main.hs"
+      component: "tiger:exe:tiger"
+
+    - path: "test"
+      component: "tiger:test:tiger-test"
