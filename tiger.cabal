@@ -74,9 +74,15 @@ library
   import: defaults
   hs-source-dirs: src
   build-depends:
-    base ^>=4.14.2.0
+    base ^>=4.14.2.0,
+    array
+  build-tool-depends:
+    alex:alex
   exposed-modules:
-    MyLib
+    Language.Tiger.Syntax.Loc
+    Language.Tiger.Syntax.Token
+    Language.Tiger.Syntax.Lexer
+  other-modules:
 
 executable tiger
   import: defaults

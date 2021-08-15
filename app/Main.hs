@@ -1,8 +1,8 @@
 module Main where
 
-import qualified MyLib (someFunc)
+import Language.Tiger.Syntax.Lexer qualified as Lex
 
 main :: IO ()
 main = do
-  putStrLn "Hello, Haskell!"
-  MyLib.someFunc
+  s <- getContents
+  print $ Lex.lex s
