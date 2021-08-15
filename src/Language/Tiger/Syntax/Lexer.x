@@ -1,21 +1,23 @@
 {
 
+{-# LANGUAGE BlockArguments #-}
+
 module Language.Tiger.Syntax.Lexer
   ( lex,
   )
 where
 
 import Prelude hiding (lex)
-import Data.Bifunctor
-import Data.Char (chr)
+import Control.Monad
+import Data.Char
 import Language.Tiger.Syntax.Token qualified as Tok
 import Language.Tiger.Syntax.Loc qualified as Loc
 
 }
 
-%wrapper "monad"
+%wrapper "monadUserState"
 
-$whitechar = [ \t\n\r\f\v]
+$whitechar = [\ \t\n\r\f\v]
 
 $digit = 0-9
 $alpha = [a-zA-Z]
@@ -37,96 +39,124 @@ $charesc = [nt\\\"]
 
 tokens :-
 
-  $white+                       { skip }
-  "/*"                          { skipComment }
-  type                          { special Tok.Type }
-  var                           { special Tok.Var }
-  function                      { special Tok.Func }
-  of                            { special Tok.Of }
-  end                           { special Tok.End }
-  in                            { special Tok.In }
-  nil                           { special Tok.Nil }
-  let                           { special Tok.Let }
-  do                            { special Tok.Do }
-  to                            { special Tok.To }
-  for                           { special Tok.For }
-  while                         { special Tok.While }
-  else                          { special Tok.Else }
-  then                          { special Tok.Then }
-  if                            { special Tok.If }
-  array                         { special Tok.Array }
-  ":="                          { special Tok.Assign }
-  "|"                           { special Tok.Or }
-  "&"                           { special Tok.And }
-  ">="                          { special Tok.Ge }
-  ">"                           { special Tok.Gt }
-  "<="                          { special Tok.Le }
-  "<"                           { special Tok.Lt }
-  "<>"                          { special Tok.Neq }
-  "="                           { special Tok.Eq }
-  "/"                           { special Tok.Div }
-  "*"                           { special Tok.Mul }
-  "-"                           { special Tok.Sub }
-  "+"                           { special Tok.Add }
-  "."                           { special Tok.Dot }
-  "{"                           { special Tok.RBrace }
-  "}"                           { special Tok.LBrace }
-  "["                           { special Tok.RBrack }
-  "]"                           { special Tok.LBrack }
-  "("                           { special Tok.RParen }
-  ")"                           { special Tok.LParen }
-  ";"                           { special Tok.Semi }
-  ":"                           { special Tok.Colon }
-  ","                           { special Tok.Comma }
-  @decimal                      { mkAction (Tok.Int . read) }
-  @string                       { mkAction Tok.Str }
-  @ident                        { mkAction Tok.Id }
+<0>                 $white+                       ;
+<0>                 "/*"                          { enterComment `andBegin` state_comment }
+<state_comment>     "/*"                          { enterComment }
+<state_comment>     "*/"                          { leaveComment }
+<state_comment>     .                             ;
+
+<0>                 type                          { special Tok.Type }
+<0>                 var                           { special Tok.Var }
+<0>                 function                      { special Tok.Func }
+<0>                 of                            { special Tok.Of }
+<0>                 end                           { special Tok.End }
+<0>                 in                            { special Tok.In }
+<0>                 nil                           { special Tok.Nil }
+<0>                 let                           { special Tok.Let }
+<0>                 do                            { special Tok.Do }
+<0>                 to                            { special Tok.To }
+<0>                 for                           { special Tok.For }
+<0>                 while                         { special Tok.While }
+<0>                 else                          { special Tok.Else }
+<0>                 then                          { special Tok.Then }
+<0>                 if                            { special Tok.If }
+<0>                 array                         { special Tok.Array }
+
+<0>                 ":="                          { special Tok.Assign }
+<0>                 "|"                           { special Tok.Or }
+<0>                 "&"                           { special Tok.And }
+<0>                 ">="                          { special Tok.Ge }
+<0>                 ">"                           { special Tok.Gt }
+<0>                 "<="                          { special Tok.Le }
+<0>                 "<"                           { special Tok.Lt }
+<0>                 "<>"                          { special Tok.Neq }
+<0>                 "="                           { special Tok.Eq }
+<0>                 "/"                           { special Tok.Div }
+<0>                 "*"                           { special Tok.Mul }
+<0>                 "-"                           { special Tok.Sub }
+<0>                 "+"                           { special Tok.Add }
+<0>                 "."                           { special Tok.Dot }
+<0>                 "{"                           { special Tok.RBrace }
+<0>                 "}"                           { special Tok.LBrace }
+<0>                 "["                           { special Tok.RBrack }
+<0>                 "]"                           { special Tok.LBrack }
+<0>                 "("                           { special Tok.RParen }
+<0>                 ")"                           { special Tok.LParen }
+<0>                 ";"                           { special Tok.Semi }
+<0>                 ":"                           { special Tok.Colon }
+<0>                 ","                           { special Tok.Comma }
+
+<0>                 @decimal                      { mkAction (Tok.Int . read) }
+
+<0>                 \"                            { enterString `andBegin` state_string }
+<state_string>      \"                            { leaveString `andBegin` 0 }
+<state_string>      \\n                           { accumChar '\n' }
+<state_string>      \\t                           { accumChar '\t' }
+<state_string>      \\\\                          { accumChar '\\' }
+<state_string>      \"                            { accumChar '\"' }
+<state_string>      \\ $whitechar+ \\             ;
+<state_string>      .                             { accumCurrent }
+<state_string>      \n                            { skip }
+<state_string>      \\ $digit{3}                  { accumAscii }
+
+<0>                 @ident                        { mkAction Tok.Id }
 
 {
 
-mkAction :: (String -> a) -> AlexAction (Loc.Located a)
 mkAction f (AlexPn offset _ _, _, _, str) len =
   pure . Loc.At (Loc.Span offset (offset + len)) $ f (take len str)
 
-special :: Tok.Token -> AlexAction (Loc.Located Tok.Token)
 special = mkAction . const
 
-skipComment :: AlexAction (Loc.Located Tok.Token)
-skipComment _ _ = alexGetInput >>= loop 1
-  where
-    loop :: Int -> AlexInput -> Alex (Loc.Located Tok.Token)
-    loop 0 input = do
-      alexSetInput input
-      alexMonadScan
-    loop n input = do
-      case alexGetChar input of
-        Nothing -> err input
-        Just ('*', input') ->
-          case alexGetChar input' of
-            Nothing -> err input'
-            Just ('/', input'') -> loop (n - 1) input''
-            Just (_, input'') -> loop n input''
-        Just ('/', input') ->
-          case alexGetChar input' of
-            Nothing -> err input'
-            Just ('*', input'') -> loop (n + 1) input''
-            Just (_, input'') -> loop n input''
-        Just (_, input') ->
-          loop n input'
+enterComment _ _ = do
+  modifyCommentDepth (+ 1)
+  alexMonadScan
 
-    err input = do
-      alexSetInput input
-      alexError "error in nested comment"
+leaveComment _ _ = do
+  modifyCommentDepth (subtract 1)
+  cd <- getCommentDepth
+  when (cd == 0) do
+    alexSetStartCode 0
+  alexMonadScan
 
-alexEOF :: Alex (Loc.Located Tok.Token)
+enterString _ _ = do
+  setStringAcc ""
+  alexMonadScan
+
+accumChar c _ _ = modifyStringAcc (c :) *> alexMonadScan
+accumCurrent i@(_, _, _, input) len = accumChar (head input) i len
+accumAscii i@(_, _, _, input) len = accumChar (chr . read $ drop 1 input) i len
+
+leaveString (AlexPn offset _ _, _, _, _) len = do
+  s <- getStringAcc
+  pure $ Loc.At (Loc.Span offset (offset + len)) (Tok.Str $ reverse s)
+
+data AlexUserState = AlexUserState
+  { commentDepth :: Int,
+    stringAccum :: String
+  }
+
+alexInitUserState = AlexUserState
+  { commentDepth = 0,
+    stringAccum = ""
+  }
+
+getCommentDepth = Alex \s@AlexState { alex_ust = ust } ->
+  Right (s, commentDepth ust)
+setCommentDepth = modifyCommentDepth . const
+modifyCommentDepth f = Alex \s@AlexState { alex_ust = ust } ->
+  Right (s { alex_ust = ust { commentDepth = f (commentDepth ust) } }, ())
+
+getStringAcc = Alex \s@AlexState { alex_ust = ust } ->
+  Right (s, stringAccum ust)
+setStringAcc = modifyStringAcc . const
+modifyStringAcc f = Alex \s@AlexState { alex_ust = ust } ->
+  Right (s { alex_ust = ust { stringAccum = f (stringAccum ust) } }, ())
+
 alexEOF = do
   (AlexPn offset _ _, _, _, _) <- alexGetInput
   pure $ Loc.At (Loc.Span offset offset) Tok.EOF
 
-alexGetChar :: AlexInput -> Maybe (Char, AlexInput)
-alexGetChar input = first (chr . fromIntegral) <$> alexGetByte input
-
-lex :: String -> Either String [Loc.Located Tok.Token]
 lex s = runAlex s (loop [])
   where
     loop toks = do
