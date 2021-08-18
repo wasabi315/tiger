@@ -1,9 +1,14 @@
 module Language.Tiger.Syntax.Token
-  ( Token (..),
+  ( Token,
+    Token_ (..),
   )
 where
 
-data Token
+import Language.Tiger.Syntax.Loc qualified as Loc
+
+type Token = Loc.Located Token_
+
+data Token_
   = Type
   | Var
   | Func

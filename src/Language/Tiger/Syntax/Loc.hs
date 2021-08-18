@@ -1,19 +1,38 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 module Language.Tiger.Syntax.Loc
-  ( Span (..),
+  ( Span,
+    start,
+    end,
+    pattern Span,
     Located (..),
-    mergeSpan,
   )
 where
 
-data Span = Span
-  { start :: {-# UNPACK #-} !Int,
-    end :: {-# UNPACK #-} !Int
-  }
+-- Invariant: start s <= end s
+data Span = UnsafeSpan {-# UNPACK #-} !Int {-# UNPACK #-} !Int
   deriving (Eq, Show)
 
-mergeSpan :: Span -> Span -> Span
-mergeSpan (Span start1 end1) (Span start2 end2) =
-  Span (start1 `min` start2) (end1 `max` end2)
+start, end :: Span -> Int
+start (UnsafeSpan s _) = s
+end (UnsafeSpan _ e) = e
 
-data Located a = At Span a
+pattern Span :: Int -> Int -> Span
+pattern Span s e <-
+  UnsafeSpan s e
+  where
+    Span s e
+      | s > e = error "Illegal span"
+      | otherwise = UnsafeSpan s e
+
+{-# COMPLETE Span #-}
+
+instance Semigroup Span where
+  {-# INLINE (<>) #-}
+  UnsafeSpan s1 e1 <> UnsafeSpan s2 e2 = UnsafeSpan (s1 `min` s2) (e1 `max` e2)
+
+data Located a = At
+  { loc :: Span,
+    value :: a
+  }
   deriving (Eq, Show, Functor, Foldable, Traversable)
