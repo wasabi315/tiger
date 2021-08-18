@@ -16,7 +16,7 @@ module Language.Tiger.Syntax.AST
   )
 where
 
-import Language.Tiger.Syntax.Loc qualified as Loc
+import Language.Tiger.Syntax.Location qualified as Loc
 
 type Expr = Loc.Located Expr_
 

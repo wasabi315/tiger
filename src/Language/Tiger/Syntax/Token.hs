@@ -4,7 +4,7 @@ module Language.Tiger.Syntax.Token
   )
 where
 
-import Language.Tiger.Syntax.Loc qualified as Loc
+import Language.Tiger.Syntax.Location qualified as Loc
 
 type Token = Loc.Located Token_
 

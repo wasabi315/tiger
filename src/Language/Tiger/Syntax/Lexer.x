@@ -12,7 +12,7 @@ import Prelude hiding (lex)
 import Control.Monad
 import Data.Char (chr)
 import Language.Tiger.Syntax.Token qualified as Tok
-import Language.Tiger.Syntax.Loc qualified as Loc
+import Language.Tiger.Syntax.Location qualified as Loc
 
 }
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternSynonyms #-}
 
-module Language.Tiger.Syntax.Loc
+module Language.Tiger.Syntax.Location
   ( Span,
     start,
     end,

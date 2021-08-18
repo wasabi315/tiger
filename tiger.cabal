@@ -80,7 +80,7 @@ library
     alex:alex,
     happy:happy
   exposed-modules:
-    Language.Tiger.Syntax.Loc
+    Language.Tiger.Syntax.Location
     Language.Tiger.Syntax.Token
     Language.Tiger.Syntax.Lexer
     Language.Tiger.Syntax.AST
