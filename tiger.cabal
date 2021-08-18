@@ -74,7 +74,7 @@ library
   import: defaults
   hs-source-dirs: src
   build-depends:
-    base ^>=4.14.2.0,
+    base ^>=4.14.1.0,
     array
   build-tool-depends:
     alex:alex,
@@ -91,7 +91,7 @@ executable tiger
   hs-source-dirs: app
   main-is: Main.hs
   build-depends:
-    base ^>=4.14.2.0,
+    base ^>=4.14.1.0,
     tiger
 
 test-suite tiger-test
@@ -100,4 +100,4 @@ test-suite tiger-test
   main-is: MyLibTest.hs
   type: exitcode-stdio-1.0
   build-depends:
-    base ^>=4.14.2.0
+    base ^>=4.14.1.0
