@@ -4,6 +4,7 @@ module Language.Tiger.Syntax.Token
   )
 where
 
+import Data.Text.Lazy qualified as T
 import Language.Tiger.Syntax.Location qualified as Loc
 
 type Token = Loc.Located Token_
@@ -48,8 +49,8 @@ data Token_
   | Semi
   | Colon
   | Comma
-  | Str String
+  | Str T.Text
   | Int {-# UNPACK #-} !Int
-  | Id String
+  | Id T.Text
   | EOF
   deriving (Eq, Show)

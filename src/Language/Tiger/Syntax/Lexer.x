@@ -1,22 +1,24 @@
 {
 
-{-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE BlockArguments #-}
-
 module Language.Tiger.Syntax.Lexer
-  ( lex,
+  ( munch,
+    munchAll,
+    lexer
   )
 where
 
-import Prelude hiding (lex)
 import Control.Monad
-import Data.Char (chr)
-import Language.Tiger.Syntax.Token qualified as Tok
+import Data.Char
+import Data.Text.Lazy qualified as T
+import Data.Text.Lazy.Builder qualified as TB
+import Data.Text.Lazy.Read qualified as T
+import Language.Tiger.Bug qualified as Bug
+import Language.Tiger.Syntax.Errors qualified as Err
 import Language.Tiger.Syntax.Location qualified as Loc
+import Language.Tiger.Syntax.Monad
+import Language.Tiger.Syntax.Token qualified as Tok
 
 }
-
-%wrapper "monadUserState"
 
 $whitechar = [\ \t\n\r\f\v]
 
@@ -29,179 +31,199 @@ $alpha = [a-zA-Z]
 
 tokens :-
 
-<0>                $white+              { skip }
-<0>                "/*"                 { enterComment `andBegin` state_comment }
-<state_comment>    "/*"                 { enterComment }
-<state_comment>    "*/"                 { leaveComment }
-<0>                "*/"                 { \_ _ -> alexError "Illegal comment close" }
-<state_comment>    .                    { skip }
-<state_comment>    \n                   { skip }
+<0>                $white+              ;
+<0>                "/*"                 { enterComment `andBegin` stateComment }
+<stateComment>     "/*"                 { enterComment }
+<stateComment>     "*/"                 { leaveComment }
+<0>                "*/"                 { errorToken' Err.IllegalCommentClose }
+<stateComment>     .                    ;
+<stateComment>     \n                   ;
 
-<0>                "type"               { located $ special Tok.Type }
-<0>                "var"                { located $ special Tok.Var }
-<0>                "function"           { located $ special Tok.Func }
-<0>                "of"                 { located $ special Tok.Of }
-<0>                "end"                { located $ special Tok.End }
-<0>                "in"                 { located $ special Tok.In }
-<0>                "nil"                { located $ special Tok.Nil }
-<0>                "let"                { located $ special Tok.Let }
-<0>                "do"                 { located $ special Tok.Do }
-<0>                "to"                 { located $ special Tok.To }
-<0>                "for"                { located $ special Tok.For }
-<0>                "while"              { located $ special Tok.While }
-<0>                "else"               { located $ special Tok.Else }
-<0>                "then"               { located $ special Tok.Then }
-<0>                "if"                 { located $ special Tok.If }
-<0>                "array"              { located $ special Tok.Array }
+<0>                "type"               { special Tok.Type }
+<0>                "var"                { special Tok.Var }
+<0>                "function"           { special Tok.Func }
+<0>                "of"                 { special Tok.Of }
+<0>                "end"                { special Tok.End }
+<0>                "in"                 { special Tok.In }
+<0>                "nil"                { special Tok.Nil }
+<0>                "let"                { special Tok.Let }
+<0>                "do"                 { special Tok.Do }
+<0>                "to"                 { special Tok.To }
+<0>                "for"                { special Tok.For }
+<0>                "while"              { special Tok.While }
+<0>                "else"               { special Tok.Else }
+<0>                "then"               { special Tok.Then }
+<0>                "if"                 { special Tok.If }
+<0>                "array"              { special Tok.Array }
 
-<0>                ":="                 { located $ special Tok.Assign }
-<0>                "|"                  { located $ special Tok.Or }
-<0>                "&"                  { located $ special Tok.And }
-<0>                ">="                 { located $ special Tok.Ge }
-<0>                ">"                  { located $ special Tok.Gt }
-<0>                "<="                 { located $ special Tok.Le }
-<0>                "<"                  { located $ special Tok.Lt }
-<0>                "<>"                 { located $ special Tok.Neq }
-<0>                "="                  { located $ special Tok.Eq }
-<0>                "/"                  { located $ special Tok.Div }
-<0>                "*"                  { located $ special Tok.Mul }
-<0>                "-"                  { located $ special Tok.Sub }
-<0>                "+"                  { located $ special Tok.Add }
-<0>                "."                  { located $ special Tok.Dot }
-<0>                "{"                  { located $ special Tok.RBrace }
-<0>                "}"                  { located $ special Tok.LBrace }
-<0>                "["                  { located $ special Tok.RBrack }
-<0>                "]"                  { located $ special Tok.LBrack }
-<0>                "("                  { located $ special Tok.RParen }
-<0>                ")"                  { located $ special Tok.LParen }
-<0>                ";"                  { located $ special Tok.Semi }
-<0>                ":"                  { located $ special Tok.Colon }
-<0>                ","                  { located $ special Tok.Comma }
+<0>                ":="                 { special Tok.Assign }
+<0>                "|"                  { special Tok.Or }
+<0>                "&"                  { special Tok.And }
+<0>                ">="                 { special Tok.Ge }
+<0>                ">"                  { special Tok.Gt }
+<0>                "<="                 { special Tok.Le }
+<0>                "<"                  { special Tok.Lt }
+<0>                "<>"                 { special Tok.Neq }
+<0>                "="                  { special Tok.Eq }
+<0>                "/"                  { special Tok.Div }
+<0>                "*"                  { special Tok.Mul }
+<0>                "-"                  { special Tok.Sub }
+<0>                "+"                  { special Tok.Add }
+<0>                "."                  { special Tok.Dot }
+<0>                "{"                  { special Tok.RBrace }
+<0>                "}"                  { special Tok.LBrace }
+<0>                "["                  { special Tok.RBrack }
+<0>                "]"                  { special Tok.LBrack }
+<0>                "("                  { special Tok.RParen }
+<0>                ")"                  { special Tok.LParen }
+<0>                ";"                  { special Tok.Semi }
+<0>                ":"                  { special Tok.Colon }
+<0>                ","                  { special Tok.Comma }
 
-<0>                @ident               { located $ withLexeme Tok.Id }
+<0>                @ident               { token Tok.Id }
 
-<0>                @decimal             { located $ withLexeme (Tok.Int . read) }
+<0>                @decimal             { token (Tok.Int . read . T.unpack) }
 
-<0>                \"                   { enterString `andBegin` state_string }
-<state_string>     \"                   { leaveString `andBegin` 0 }
-<state_string>     \\n                  { accumChar '\n' }
-<state_string>     \\t                  { accumChar '\t' }
-<state_string>     \\\\                 { accumChar '\\' }
-<state_string>     \"                   { accumChar '\"' }
-<state_string>     \\ $digit{3}         { accumAscii }
-<state_string>     \\                   { \_ _ -> alexError "Illegal escape sequence" }
-<state_string>     .                    { accumCurrent }
-<state_string>     \n                   { \_ _ -> alexError "Illegal newline in string" }
-<state_string>     \\ $whitechar+ \\    { skip }
+<0>                \"                   { enterString `andBegin` stateString }
+<stateString>      \"                   { leaveString `andBegin` 0 }
+<stateString>      \\n                  { accumChar '\n' }
+<stateString>      \\t                  { accumChar '\t' }
+<stateString>      \\\\                 { accumChar '\\' }
+<stateString>      \"                   { accumChar '\"' }
+<stateString>      \\ $digit{3}         { accumAscii }
+<stateString>      \\.                  { errorToken Err.IllegalEscapeSequence }
+<stateString>      .                    { accumCurrent }
+<stateString>      \n                   { errorToken' Err.NewlineInString }
+<stateString>      \\ $whitechar+ \\    ;
 
-<0>                \n                   { skip }
-<0>                .                    { \_ _ -> alexError "Illegal charactor" }
+<0>                \n                   ;
+<0>                .                    { errorToken Err.UnknownToken }
 
 {
 
+type Action = AlexInput -> Int -> Parser Tok.Token
+
+{- Utilities -}
+
+andBegin :: Action -> Int -> Action
+andBegin action lexState input len = do
+  setLexState lexState
+  action input len
+
+token :: (T.Text -> Tok.Token_) -> Action
+token f AlexInput {..} len = do
+  let sp = Loc.Span offset (offset + len)
+      str = T.take (fromIntegral len) rest
+  pure $ Loc.At sp (f str)
+
+special :: Tok.Token_ -> Action
+special = token . const
+
+errorToken :: (T.Text -> Err.ErrorKind) -> Action
+errorToken f AlexInput {..} len = do
+  let sp = Loc.Span offset (offset + len)
+      str = T.take (fromIntegral len) rest
+  parseError $ Loc.At sp (f str)
+
+errorToken' :: Err.ErrorKind -> Action
+errorToken' = errorToken . const
+
+continue = munch
+
 {- Actions -}
 
-located m i@(AlexPn offset _ _, _, _, _) len = do
-  a <- m i len
-  let !sp = Loc.Span offset (offset + len)
-  pure $ Loc.At sp a
-
-withLexeme f (_, _, _, str) len = pure $ f (take len str)
-
-special = withLexeme . const
-
+enterComment :: Action
 enterComment _ _ = do
-  modifyCommentDepth (+ 1)
-  alexMonadScan
+  cd <- getCommentDepth
+  setCommentDepth (cd + 1)
+  continue
 
+leaveComment :: Action
 leaveComment _ _ = do
-  modifyCommentDepth (subtract 1)
   cd <- getCommentDepth
-  when (cd == 0) do
-    alexSetStartCode 0
-  alexMonadScan
+  setCommentDepth (cd - 1)
+  when (cd == 1) $ do
+    setLexState 0
+  continue
 
-enterString _ _ = do
-  setStringAcc ""
+enterString :: Action
+enterString AlexInput {offset} _ = do
+  setStringBuf mempty
+  setStringBegin offset
   setInString True
-  alexMonadScan
+  continue
 
-leaveString (AlexPn offset _ _, _, _, _) _ = do
-  s <- getStringAcc
+leaveString :: Action
+leaveString AlexInput {offset} _ = do
+  buf <- getStringBuf
+  begin <- getStringBegin
   setInString False
-  let !sp = Loc.Span (offset - length s - 1) (offset + 1)
-  pure $ Loc.At sp (Tok.Str $ reverse s)
+  let sp = Loc.Span begin (offset + 1)
+      str = TB.toLazyText buf
+  pure $ Loc.At sp (Tok.Str str)
 
+accumChar :: Char -> Action
 accumChar c _ _ = do
-  modifyStringAcc (c :)
-  alexMonadScan
+  appendStringBuf $ TB.singleton c
+  continue
 
-accumCurrent i@(_, _, _, input) len =
-  accumChar (head input) i len
+accumCurrent :: Action
+accumCurrent input@AlexInput {rest} len = do
+  when (len /= 1) $
+    Bug.compilerBug "Invalid accumCurrent call"
+  accumChar (T.head rest) input len
 
-accumAscii i@(_, _, _, input) len = do
-  let !c = chr . read . take 3 . drop 1 $ input
-  accumChar c i len
-
-{- User state -}
-
-data AlexUserState = AlexUserState
-  { commentDepth :: Int,
-    inString :: Bool,
-    stringBuf :: String
-  }
-
-getCommentDepth = Alex \s@AlexState { alex_ust = ust } ->
-  Right (s, commentDepth ust)
-
-setCommentDepth = modifyCommentDepth . const
-
-modifyCommentDepth f = Alex \s@AlexState { alex_ust = ust } ->
-  Right (s { alex_ust = ust { commentDepth = f (commentDepth ust) } }, ())
-
-getInString = Alex \s@AlexState { alex_ust = ust } ->
-  Right (s, inString ust)
-
-setInString b = Alex \s@AlexState { alex_ust = ust } ->
-  Right (s { alex_ust = ust { inString = b } }, ())
-
-getStringAcc = Alex \s@AlexState { alex_ust = ust } ->
-  Right (s, stringBuf ust)
-
-setStringAcc = modifyStringAcc . const
-
-modifyStringAcc f = Alex \s@AlexState { alex_ust = ust } ->
-  Right (s { alex_ust = ust { stringBuf = f (stringBuf ust) } }, ())
-
-{- Definitions needed by alex -}
-
-alexInitUserState = AlexUserState
-  { commentDepth = 0,
-    inString = False,
-    stringBuf = ""
-  }
-
-alexEOF = do
-  cd <- getCommentDepth
-  when (cd > 0) do
-    alexError "Unclosed comment at EOF"
-
-  inStr <- getInString
-  when inStr do
-    alexError "Unclosed strign at EOF"
-
-  (AlexPn offset _ _, _, _, _) <- alexGetInput
-  pure $ Loc.At (Loc.Span offset offset) Tok.EOF
+accumAscii :: Action
+accumAscii input@AlexInput {..} len = do
+  when (len /= 4) $
+    Bug.compilerBug "Invalid accumAscii call"
+  let subStr = T.take 3 . T.drop 1 $ rest
+  let !dec = case T.decimal subStr of
+        Right (d, "") -> d
+        _ -> Bug.compilerBug "Invalid accumAscii call"
+  when (dec >= 256) $ do
+    let sp = Loc.Span offset (offset + len)
+    parseError $ Loc.At sp (Err.IllegalAsciiValue dec)
+  accumChar (chr dec) input len
 
 {- Execution -}
 
-lex s = runAlex s (loop [])
+munch :: Parser Tok.Token
+munch = do
+  ParserState {..} <- getParserState
+
+  case alexScan input lexState of
+    AlexEOF -> do
+      let sp = Loc.Span (offset input) (offset input)
+      when (commentDepth > 0) $
+        parseError $ Loc.At sp Err.UnclosedComment
+      when inString $
+        parseError $ Loc.At sp Err.UnclosedString
+      pure $ Loc.At sp Tok.EOF
+    
+    AlexError input' -> do
+      let sp = Loc.Span (offset input') (offset input' + 1)
+      parseError $ Loc.At sp Err.UnknownLexicalIssue
+
+    AlexSkip input' _ -> do
+      setInput input'
+      munch
+
+    AlexToken input' len action -> do
+      setInput input'
+      action (input {bytes = []}) len
+
+munchAll :: Parser [Tok.Token]
+munchAll = loop []
   where
     loop toks = do
-      tok@(Loc.At _ kind) <- alexMonadScan
+      tok@(Loc.At _ kind) <- munch
       let toks' = tok : toks
       if kind == Tok.EOF
         then pure $ reverse toks'
         else loop toks'
+
+lexer :: (Tok.Token -> Parser a) -> Parser a
+lexer k = munch >>= k
 
 }

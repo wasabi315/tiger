@@ -16,17 +16,20 @@ module Language.Tiger.Syntax.AST
   )
 where
 
+import Data.Text.Lazy qualified as T
 import Language.Tiger.Syntax.Location qualified as Loc
+
+type Symbol = T.Text
 
 type Expr = Loc.Located Expr_
 
 data Expr_
   = Var Var
   | Int Int
-  | Str String
-  | Call String [Expr]
+  | Str T.Text
+  | Call Symbol [Expr]
   | Op Op Expr Expr
-  | Record [Loc.Located (String, Expr)] String
+  | Record [Loc.Located (Symbol, Expr)] Symbol
   | Seq [Expr]
   | Assign Var Expr
   | If Expr Expr (Maybe Expr)
@@ -40,8 +43,8 @@ data Expr_
 type Var = Loc.Located Var_
 
 data Var_
-  = VName String
-  | VField Var String
+  = VName Symbol
+  | VField Var Symbol
   | VIxed Var Expr
   deriving (Show)
 
@@ -54,9 +57,9 @@ data Decl
 type FnDecl = Loc.Located FnDecl_
 
 data FnDecl_ = FnDecl
-  { fdName :: String,
-    fdParams :: [Loc.Located (String, String)],
-    fdResult :: Maybe (Loc.Located String),
+  { fdName :: Symbol,
+    fdParams :: [Loc.Located (Symbol, Symbol)],
+    fdResult :: Maybe (Loc.Located Symbol),
     fdBody :: Expr
   }
   deriving (Show)
@@ -64,8 +67,8 @@ data FnDecl_ = FnDecl
 type VarDecl = Loc.Located VarDecl_
 
 data VarDecl_ = VarDecl
-  { vdName :: String,
-    vdType :: Maybe (Loc.Located String),
+  { vdName :: Symbol,
+    vdType :: Maybe (Loc.Located Symbol),
     vdInit :: Expr
   }
   deriving (Show)
@@ -73,7 +76,7 @@ data VarDecl_ = VarDecl
 type TyDecl = Loc.Located TyDecl_
 
 data TyDecl_ = TyDecl
-  { tdName :: String,
+  { tdName :: Symbol,
     tdType :: Type
   }
   deriving (Show)
@@ -81,9 +84,9 @@ data TyDecl_ = TyDecl
 type Type = Loc.Located Type_
 
 data Type_
-  = TName String
-  | TRecord
-  | TArray String
+  = TName Symbol
+  | TRecord [Loc.Located (Symbol, Symbol)]
+  | TArray Symbol
   deriving (Show)
 
 data Op

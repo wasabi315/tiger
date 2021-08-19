@@ -75,16 +75,21 @@ library
   hs-source-dirs: src
   build-depends:
     base ^>=4.14.1.0,
-    array
+    array,
+    text,
+    utf8-string
   build-tool-depends:
     alex:alex,
     happy:happy
   exposed-modules:
     Language.Tiger.Syntax.Location
     Language.Tiger.Syntax.Token
-    Language.Tiger.Syntax.Lexer
     Language.Tiger.Syntax.AST
+    Language.Tiger.Syntax.Errors
+    Language.Tiger.Syntax.Monad
+    Language.Tiger.Syntax.Lexer
   other-modules:
+    Language.Tiger.Bug
 
 executable tiger
   import: defaults
@@ -92,6 +97,7 @@ executable tiger
   main-is: Main.hs
   build-depends:
     base ^>=4.14.1.0,
+    text,
     tiger
 
 test-suite tiger-test
