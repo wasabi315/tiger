@@ -6,6 +6,7 @@ where
 
 import Data.Text.Lazy qualified as T
 import Language.Tiger.Syntax.Location qualified as Loc
+import Language.Tiger.Syntax.Token qualified as Tok
 
 type Error = Loc.Located ErrorKind
 
@@ -17,5 +18,6 @@ data ErrorKind
   | UnclosedComment
   | IllegalCommentClose
   | UnknownToken T.Text
-  | UnknownLexicalIssue
+  | UnknownLexicalError
+  | ParseError Tok.Token_ [String]
   deriving (Show)

@@ -22,7 +22,7 @@ module Language.Tiger.Syntax.Monad
     getStringBuf,
     setStringBuf,
     appendStringBuf,
-    parseError,
+    throw,
   )
 where
 
@@ -155,5 +155,5 @@ appendStringBuf buf =
   Parser $ \s@ParserState {stringBuf} _ kok ->
     kok (s {stringBuf = stringBuf <> buf}) ()
 
-parseError :: e -> ParserM e s a
-parseError e = Parser $ \s kerr _ -> kerr s e
+throw :: e -> ParserM e s a
+throw e = Parser $ \s kerr _ -> kerr s e

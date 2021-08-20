@@ -25,6 +25,7 @@ type Expr = Loc.Located Expr_
 
 data Expr_
   = Var Var
+  | Nil
   | Int Int
   | Str T.Text
   | Call Symbol [Expr]
@@ -37,7 +38,7 @@ data Expr_
   | For Var Expr Expr Expr
   | Break
   | Let [Decl] Expr
-  | Array String Expr Expr
+  | Array Symbol Expr Expr
   deriving (Show)
 
 type Var = Loc.Located Var_

@@ -51,6 +51,7 @@ tokens :-
 <0>                "to"                 { special Tok.To }
 <0>                "for"                { special Tok.For }
 <0>                "while"              { special Tok.While }
+<0>                "break"              { special Tok.Break }
 <0>                "else"               { special Tok.Else }
 <0>                "then"               { special Tok.Then }
 <0>                "if"                 { special Tok.If }
@@ -70,12 +71,12 @@ tokens :-
 <0>                "-"                  { special Tok.Sub }
 <0>                "+"                  { special Tok.Add }
 <0>                "."                  { special Tok.Dot }
-<0>                "{"                  { special Tok.RBrace }
-<0>                "}"                  { special Tok.LBrace }
-<0>                "["                  { special Tok.RBrack }
-<0>                "]"                  { special Tok.LBrack }
-<0>                "("                  { special Tok.RParen }
-<0>                ")"                  { special Tok.LParen }
+<0>                "{"                  { special Tok.LBrace }
+<0>                "}"                  { special Tok.RBrace }
+<0>                "["                  { special Tok.LBrack }
+<0>                "]"                  { special Tok.RBrack }
+<0>                "("                  { special Tok.LParen }
+<0>                ")"                  { special Tok.RParen }
 <0>                ";"                  { special Tok.Semi }
 <0>                ":"                  { special Tok.Colon }
 <0>                ","                  { special Tok.Comma }
@@ -123,7 +124,7 @@ errorToken :: (T.Text -> Err.ErrorKind) -> Action
 errorToken f AlexInput {..} len = do
   let sp = Loc.Span offset (offset + len)
       str = T.take (fromIntegral len) rest
-  parseError $ Loc.At sp (f str)
+  throw $ Loc.At sp (f str)
 
 errorToken' :: Err.ErrorKind -> Action
 errorToken' = errorToken . const
@@ -183,7 +184,7 @@ accumAscii input@AlexInput {..} len = do
         _ -> Bug.compilerBug "Invalid accumAscii call"
   when (dec >= 256) $ do
     let sp = Loc.Span offset (offset + len)
-    parseError $ Loc.At sp (Err.IllegalAsciiValue dec)
+    throw $ Loc.At sp (Err.IllegalAsciiValue dec)
   accumChar (chr dec) input len
 
 {- Execution -}
@@ -196,14 +197,14 @@ munch = do
     AlexEOF -> do
       let sp = Loc.Span (offset input) (offset input)
       when (commentDepth > 0) $
-        parseError $ Loc.At sp Err.UnclosedComment
+        throw $ Loc.At sp Err.UnclosedComment
       when inString $
-        parseError $ Loc.At sp Err.UnclosedString
+        throw $ Loc.At sp Err.UnclosedString
       pure $ Loc.At sp Tok.EOF
     
     AlexError input' -> do
       let sp = Loc.Span (offset input') (offset input' + 1)
-      parseError $ Loc.At sp Err.UnknownLexicalIssue
+      throw $ Loc.At sp Err.UnknownLexicalError
 
     AlexSkip input' _ -> do
       setInput input'

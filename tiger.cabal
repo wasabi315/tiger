@@ -76,6 +76,7 @@ library
   build-depends:
     base ^>=4.14.1.0,
     array,
+    comonad,
     text,
     utf8-string
   build-tool-depends:
@@ -88,6 +89,7 @@ library
     Language.Tiger.Syntax.Errors
     Language.Tiger.Syntax.Monad
     Language.Tiger.Syntax.Lexer
+    Language.Tiger.Syntax.Parser
   other-modules:
     Language.Tiger.Bug
 

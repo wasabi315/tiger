@@ -22,6 +22,7 @@ data Token_
   | To
   | For
   | While
+  | Break
   | Else
   | Then
   | If
