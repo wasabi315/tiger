@@ -21,11 +21,12 @@ data Span = UnsafeSpan {-# UNPACK #-} !Int {-# UNPACK #-} !Int
   deriving (Eq)
 
 instance Show Span where
-  showsPrec _ (UnsafeSpan s e) =
-    showString "Span "
-      . shows s
-      . showChar ' '
-      . shows e
+  showsPrec prec (UnsafeSpan s e) =
+    showParen (prec > 10) $
+      showString "Span "
+        . shows s
+        . showChar ' '
+        . shows e
 
 start, end :: Span -> Int
 start (UnsafeSpan s _) = s

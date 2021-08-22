@@ -3,7 +3,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module Language.Tiger.Syntax.Parser
-  ( tiger,
+  ( parse,
   )
 where
 
@@ -193,5 +193,8 @@ atId _ = Nothing
 parseError :: (Tok.Token, [String]) -> Parser a
 parseError (tok, explist) =
   throw $ Err.ExpectOneOfBut explist <$> tok
+
+parse :: T.Text -> Either Err.Error A.Expr
+parse = runParser tiger
 
 }

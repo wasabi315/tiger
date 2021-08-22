@@ -1,12 +1,12 @@
 {
 
 module Language.Tiger.Syntax.Lexer
-  ( munch,
-    munchAll,
+  ( lex,
     lexer
   )
 where
 
+import Prelude hiding (lex)
 import Control.Monad
 import Data.Char
 import Data.Text.Lazy qualified as T
@@ -214,8 +214,8 @@ munch = do
       setInput input'
       action (input {bytes = []}) len
 
-munchAll :: Parser [Tok.Token]
-munchAll = loop []
+lex :: T.Text -> Either Err.Error [Tok.Token]
+lex = runParser (loop [])
   where
     loop toks = do
       tok@(Loc.At _ kind) <- munch
