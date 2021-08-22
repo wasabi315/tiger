@@ -95,8 +95,8 @@ Expr :: { A.Expr }
   | int                                                              { fmap A.Int $1 }
   | str                                                              { fmap A.Str $1 }
   | ident '(' SepBy(',', Expr) ')'                                   { Loc.merge $1 $4 (A.Call (extract $1) $3) }
-  | Expr '|' Expr                                                    { Loc.merge $1 $3 undefined }
-  | Expr '&' Expr                                                    { Loc.merge $1 $3 undefined }
+  | Expr '|' Expr                                                    { Loc.merge $1 $3 (A.If $1 (A.Int 1 <\$ $2) (Just $3)) }
+  | Expr '&' Expr                                                    { Loc.merge $1 $3 (A.If $1 $3 (Just $ A.Int 0 <\$ $2)) }
   | Expr '=' Expr                                                    { Loc.merge $1 $3 (A.Op A.Eq $1 $3) }
   | Expr '<>' Expr                                                   { Loc.merge $1 $3 (A.Op A.Neq $1 $3) }
   | Expr '>=' Expr                                                   { Loc.merge $1 $3 (A.Op A.Ge $1 $3) }
@@ -107,7 +107,7 @@ Expr :: { A.Expr }
   | Expr '-' Expr                                                    { Loc.merge $1 $3 (A.Op A.Sub $1 $3) }
   | Expr '*' Expr                                                    { Loc.merge $1 $3 (A.Op A.Mul $1 $3) }
   | Expr '/' Expr                                                    { Loc.merge $1 $3 (A.Op A.Div $1 $3) }
-  | '-' Expr %prec NEG                                               { Loc.merge $1 $2 undefined }
+  | '-' Expr %prec NEG                                               { Loc.merge $1 $2 (A.Op A.Sub (A.Int 0 <\$ $1) $2) }
   | ident '{' SepBy(',', RecordField) '}'                            { Loc.merge $1 $4 (A.Record $3 (extract $1)) }
   | ident '[' Expr ']' of Expr                                       { Loc.merge $1 $6 (A.Array (extract $1) $3 $6) }
   | Lvalue ':=' Expr                                                 { Loc.merge $1 $3 (A.Assign $1 $3) }
@@ -192,6 +192,6 @@ atId _ = Nothing
 
 parseError :: (Tok.Token, [String]) -> Parser a
 parseError (tok, explist) =
-  throw $ flip Err.ParseError explist <$> tok
+  throw $ Err.ExpectOneOfBut explist <$> tok
 
 }

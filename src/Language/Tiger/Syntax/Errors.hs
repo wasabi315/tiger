@@ -19,5 +19,5 @@ data ErrorKind
   | IllegalCommentClose
   | UnknownToken T.Text
   | UnknownLexicalError
-  | ParseError Tok.Token_ [String]
+  | ExpectOneOfBut [String] Tok.Token_
   deriving (Show)
